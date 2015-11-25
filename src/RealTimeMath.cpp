@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "RealTimeMath.hpp"
+#include "../include/RealTimeMath.hpp"
 
 RealTimeMath::RealTimeMath() {
   powFast = new PowFast(18);

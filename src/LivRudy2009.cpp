@@ -33,7 +33,7 @@
 
 #include <cmath>
 
-#include "LivRudy2009.hpp"
+#include "../include/LivRudy2009.hpp"
 
 #define fastEXP RTMath.fastEXP //define shortcut for fastEXP function
 

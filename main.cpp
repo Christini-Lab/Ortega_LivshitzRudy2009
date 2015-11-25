@@ -40,7 +40,7 @@
 #include <algorithm>
 #include <iterator>
 
-#include "LivRudy2009.hpp"
+#include "include/LivRudy2009.hpp"
 
 int main() {
   LivRudy2009 model;

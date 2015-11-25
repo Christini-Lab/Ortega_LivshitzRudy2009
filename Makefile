@@ -1,8 +1,10 @@
 CXXFLAGS += -O2 -std=c++11 -g -Wall -Wextra
 LFLAGS =
 LIBS =
-SRCFILES := $(wildcard *.cpp) $(wildcard include/*.cpp)
-OBJFILES := $(patsubst %.cpp,%.o,$(wildcard *.cpp)) $(patsubst %.cpp,%.o,$(wildcard include/*.cpp))
+
+SRCFILES := $(wildcard src/*.cpp) main.cpp
+OBJFILES := $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
+
 EXEC = run
 
 all: $(EXEC)
@@ -15,7 +17,7 @@ depend: .depend
 	$(CXX) $(CXXFLAGS) -MM $^ > ./.depend;
 include .depend
 
-$(EXEC): $(OBJFILES)
+$(EXEC): $(OBJFILES) main.cpp
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean:

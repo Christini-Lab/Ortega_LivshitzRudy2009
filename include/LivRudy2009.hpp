@@ -48,7 +48,7 @@
 #ifndef LIVRUDY2009_H
 #define LIVRUDY2009_H
 
-#include "include/RealTimeMath.hpp"
+#include "RealTimeMath.hpp"
 
 class LivRudy2009 {
 

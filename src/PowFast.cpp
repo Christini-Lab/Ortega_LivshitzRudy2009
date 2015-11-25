@@ -10,7 +10,7 @@
 
 #include <math.h>
 
-#include "PowFast.hpp"
+#include "../include/PowFast.hpp"
 
 
 
