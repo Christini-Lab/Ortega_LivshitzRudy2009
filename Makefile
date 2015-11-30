@@ -1,4 +1,4 @@
-CXXFLAGS += -O2 -std=c++11 -g -Wall -Wextra
+CXXFLAGS += -O2 -std=c++11 -g
 LFLAGS =
 LIBS =
 
@@ -13,7 +13,6 @@ all: $(EXEC)
 # Automatically determine dependencies of source files
 depend: .depend
 .depend: $(SRCFILES)
-	rm -f ./.depend
 	$(CXX) $(CXXFLAGS) -MM $^ > ./.depend;
 include .depend
 

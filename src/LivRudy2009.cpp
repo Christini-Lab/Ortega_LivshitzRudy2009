@@ -124,11 +124,12 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   gamma_Nai = 0.75; // dimensionless
   gamma_Ko = 0.75; // dimensionless
   gamma_Ki = 0.75; // dimensionless
+  GCaL_ = 1.0;
   //const double hLca = 1; // dimensionless, Hill coefficient
   KmCa = 6e-4; // Half saturation constant, mM
   // T-type & background currents
-  GCaT = 0.05;
-  GCab = 0.003016;
+  GCaT_ = 0.05;
+  GCab_ = 0.003016;
   // K Currents
   GK1_ = 0.75;
   GKr_ = 0.02614;
@@ -138,7 +139,6 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   INaK_ = 2.25; // Max. current through Na-K pump (uA/uF)
   KmNa_NaK = 10; // Half-saturation concentration of NaK pump (mM)
   KmK_NaK = 1.5; // Half-saturation concentration of NaK pump (mM)
-  kNCX = 0.00025;
   ksat = 0.0001;
   eta = 0.15;
   alpha_rel = 0.125;
@@ -153,6 +153,8 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   Kmserca = 9.0e-4; // mM
   CaNSR_max = 15.0;
   tau_transfer = 120;
+  kNCX = 0.00025;
+  GNCX_ = 1.0; // Na-Ca exchanger scaling factor
   // Buffers in cytosol
   TRPNtot = 70e-3;
   KmTRPN = 0.5e-3;
@@ -271,18 +273,18 @@ void LivRudy2009::solve(){
   ICaNa_ = PCa_Na * F * FRT * V * (gamma_Nai * Nai * fastEXP(V * FRT) -
                                    gamma_Nao * Nao) / (fastEXP(V * FRT) - 1) ;
   fCa = 1 / (Cai / KmCa + 1);
-  ICaL = ICa_ * d * f * fCa;
-  ICaL_K = ICaK_* d * f * fCa;
-  ICaL_Na = ICaNa_ * d * f * fCa;
+  ICaL = GCaL_ * ICa_ * d * f * fCa;
+  ICaL_K = GCaL_ * ICaK_* d * f * fCa;
+  ICaL_Na = GCaL_ * ICaNa_ * d * f * fCa;
 
   // Background calcium current
-  ICab = GCab * (V - ECa);
+  ICab = GCab_ * (V - ECa);
 
   // Sarcolemmal calcium pump
   IpCa = IpCa_ * Cai / (Cai + KmpCa);
 
   // T-type Ca current
-  ICaT = GCaT * b*b * g * (V - ECa);
+  ICaT = GCaT_ * b*b * g * (V - ECa);
 
   // K currents
   // Time independent K current
@@ -315,7 +317,7 @@ void LivRudy2009::solve(){
                                     (KmNa_NaK / Nai)))); // pow() removed
 
   // Na-Ca exchanger
-  INCX = kNCX * fastEXP((eta - 1) * V * FRT) *
+  INCX = GNCX_ * kNCX * fastEXP((eta - 1) * V * FRT) *
       ((Nai * Nai * Nai) * Cao * fastEXP(V * FRT) - (Nao * Nao * Nao) * Cai) /
       ( 1 +ksat * fastEXP((eta - 1) * V * FRT) *
         ((Nai * Nai * Nai) * Cao * fastEXP(V * FRT) +

@@ -77,17 +77,39 @@ class LivRudy2009 {
 
   /*** Set functions ***/
   /*
-      Set model dt
-      -- dt: (ms)
+    Set model dt
+    -- dt: (ms)
   */
   void setDt(double new_dt) { DT = new_dt; };
 
+  /*
+    Set conductances
+  */
+  void setGKr(double new_g) { GKr_ = new_g; };
+  void setGKs(double new_g) { GKs_ = new_g; };
+  void setGCaL(double new_g) { GCaL_ = new_g; };
+  void setGK1(double new_g) { GK1_ = new_g; };
+  void setGCaT(double new_g) { GCaT_ = new_g; };
+  void setGNaK(double new_g) { INaK_ = new_g; };
+  void setGNCX(double new_g) { GNCX_ = new_g; };
+
   /*** Get functions ***/
   /*
-      Get model dt
-      -- dt: (ms)
-    */
-    double getDt() const { return DT; };
+    Get model dt
+    -- dt: (ms)
+  */
+  double getDt() const { return DT; };
+
+  /*
+    Get conductances
+  */
+  double setGKr() { return GKr_; };
+  double setGKs() { return GKs_; };
+  double setGCaL() { return GCaL_; };
+  double setGK1() { return GK1_; };
+  double setGCaT() { return GCaT_; };
+  double setGNaK() { return INaK_; };
+  double setGNCX() { return GNCX_; };
 
  private:
   RealTimeMath RTMath;
@@ -110,7 +132,6 @@ class LivRudy2009 {
   double I_Inject;
   double DT;
 
-  //double DT; // Already part of base class
   double dVdt;
   double Cai;
   double CaNSR;
@@ -165,6 +186,7 @@ class LivRudy2009 {
   double ENa, EK, EKs, ECa; // Reversal potetentials
   double INa, INab; // Na current
   double ICa_, ICaK_, ICaNa_, fCa, ICaL, ICaL_K, ICaL_Na; // L-type Ca current
+  double GCaL_; // L-type Ca current scaling factor, nominal = 1.0
   double ICab; // Background calcium current
   double IpCa; // Sarcolemmal calcium pump
   double ICaT; // T-type calcium current
@@ -231,8 +253,8 @@ class LivRudy2009 {
   double KmCa; // Half saturation constant, mM
 
   // T-type & background currents
-  double GCaT;
-  double GCab;
+  double GCaT_;
+  double GCab_;
 
   // K Currents
   double GK1_;
@@ -243,7 +265,6 @@ class LivRudy2009 {
   double INaK_; // Max. current through Na-K pump (uA/uF)
   double KmNa_NaK; // Half-saturation concentration of NaK pump (mM)
   double KmK_NaK; // Half-saturation concentration of NaK pump (mM)
-  double kNCX;
   double ksat;
   double eta;
   double alpha_rel;
@@ -259,6 +280,8 @@ class LivRudy2009 {
   double Kmserca; // mM
   double CaNSR_max;
   double tau_transfer;
+  double kNCX;
+  double GNCX_; // Added scaling parameter, nominal value = 1.0
 
   // Buffers in cytosol
   double TRPNtot;
