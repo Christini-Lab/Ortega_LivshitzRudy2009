@@ -103,13 +103,13 @@ class LivRudy2009 {
   /*
     Get conductances
   */
-  double setGKr() { return GKr_; };
-  double setGKs() { return GKs_; };
-  double setGCaL() { return GCaL_; };
-  double setGK1() { return GK1_; };
-  double setGCaT() { return GCaT_; };
-  double setGNaK() { return INaK_; };
-  double setGNCX() { return GNCX_; };
+  double getGKr() { return GKr_; };
+  double getGKs() { return GKs_; };
+  double getGCaL() { return GCaL_; };
+  double getGK1() { return GK1_; };
+  double getGCaT() { return GCaT_; };
+  double getGNaK() { return INaK_; };
+  double getGNCX() { return GNCX_; };
 
  private:
   RealTimeMath RTMath;
