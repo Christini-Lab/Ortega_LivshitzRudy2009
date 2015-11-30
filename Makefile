@@ -14,7 +14,7 @@ all: $(EXEC)
 depend: .depend
 .depend: $(SRCFILES)
 	$(CXX) $(CXXFLAGS) -MM $^ > ./.depend;
-include .depend
+-include .depend
 
 $(EXEC): $(OBJFILES) main.cpp
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
