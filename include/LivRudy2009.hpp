@@ -94,6 +94,10 @@ class LivRudy2009 {
   void setGCaT(double new_g) { GCaT_ = new_g; };
   void setGNaK(double new_g) { INaK_ = new_g; };
   void setGNCX(double new_g) { GNCX_ = new_g; };
+  void setGNa(double new_g) { GNa_ = new_g; };
+  void setGKp(double new_g) { GKp_ = new_g; };
+  void setGpCa(double new_g) { IpCa_ = new_g; };
+  void setGserca(double new_g) { Jserca_ = new_g; };
 
   /*
     Set conditions
@@ -118,6 +122,10 @@ class LivRudy2009 {
   double getGCaT() { return GCaT_; };
   double getGNaK() { return INaK_; };
   double getGNCX() { return GNCX_; };
+  double getGNa() { return GNa_; };
+  double getGKp() { return GKp_; };
+  double getGpCa() { return IpCa_; };
+  double getGserca() { return Jserca_; };
 
   /*
     Get conditions
@@ -211,6 +219,7 @@ class LivRudy2009 {
 
   // Intracellular Ca flux
   double Jrelinf, tau_rel, Jserca, Jtr;
+  double Jserca_; // Jserca scaling factor, nominal = 1.0
 
   // Buffering
   double BJSR, Bi;

@@ -118,6 +118,7 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   // Pumps and Transporters
   IpCa_ = 1.15; // Max. Ca current through sarcolemmal Ca pump (uA/uF)
   KmpCa = 5e-4; // Half-saturation concentration of sarcolemmal Ca pump (mM)
+  Jserca_ = 1.0; // Jserca scaling factor
   Vserca = 8.75e-3; // mM/ms
   Kmserca = 9.0e-4; // mM
   CaNSR_max = 15.0;
@@ -300,7 +301,7 @@ void LivRudy2009::solve(){
   tau_rel = beta_tau / (Krel_tau / CaJSR + 1);
   dJreldt = - (Jrelinf + Jrel) / tau_rel;
 
-  Jserca = Vserca * (Cai / (Cai + Kmserca) - CaNSR / CaNSR_max);
+  Jserca = Jserca_ * Vserca * (Cai / (Cai + Kmserca) - CaNSR / CaNSR_max);
 
   Jtr = (CaNSR - CaJSR) / tau_transfer;
 
