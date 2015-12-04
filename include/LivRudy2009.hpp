@@ -48,6 +48,8 @@
 #ifndef LIVRUDY2009_H
 #define LIVRUDY2009_H
 
+#include <vector>
+
 #include "RealTimeMath.hpp"
 
 class LivRudy2009 {
@@ -93,6 +95,12 @@ class LivRudy2009 {
   void setGNaK(double new_g) { INaK_ = new_g; };
   void setGNCX(double new_g) { GNCX_ = new_g; };
 
+  /*
+    Set conditions
+    -- conditions: array of model state values
+  */
+  void setConditions(std::vector<double> &conditions);
+
   /*** Get functions ***/
   /*
     Get model dt
@@ -110,6 +118,12 @@ class LivRudy2009 {
   double getGCaT() { return GCaT_; };
   double getGNaK() { return INaK_; };
   double getGNCX() { return GNCX_; };
+
+  /*
+    Get conditions
+    Returns double array of model state values
+  */
+  std::vector<double> getConditions();
 
  private:
   RealTimeMath RTMath;

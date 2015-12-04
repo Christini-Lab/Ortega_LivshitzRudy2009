@@ -50,7 +50,7 @@ int main() {
   double stim = 0;
   double dt = model.getDt();
   int bcl = 500; // ms
-  int beats = 5;
+  int beats = 105;
   int stimAmp = 40; // pA/pF
   int stimLength = 1; // ms
 
@@ -85,6 +85,12 @@ int main() {
       *std::max_element(voltageData.begin(), voltageData.end()) << std::endl <<
       "Simulation length: " <<
       voltageData.size() << std::endl;
+
+  std::vector<double> conditions(model.getConditions());
+  std::cout << "Conditions at end of simulation: " << std::endl;
+  for (auto it = conditions.begin(); it != conditions.end(); it++) {
+    std::cout << *it << std::endl;
+  }
 
   // Data output
   std::ofstream dataFile("voltage.dat");

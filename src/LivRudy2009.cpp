@@ -32,6 +32,7 @@
  ***/
 
 #include <cmath>
+#include <iostream>
 
 #include "../include/LivRudy2009.hpp"
 
@@ -41,46 +42,7 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   // Model parameters
   DT = 0.1;
 
-  // Initial conditions at 0 beats
-  // Not being used, retained as a reference
-  /*
-    V = -84.7;
-    Cai = 0.0822e-3;
-    CaNSR = 1.25;
-    CaJSR = 1.25;
-    Nai = 9.71;
-    Ki = 142.82;
-    m = 2.46e-4;
-    h = 0.99869;
-    j = 0.99887;
-    d = 1e-4;
-    f = 0.983;
-    b = 1e-4;
-    g = 0.983;
-    xKr = 0.229;
-    xs1 = 1e-4;
-    xs2 = 1e-4;
-    Jrel = 1e-4;
-  */
-
-  // Initial conditions after 700 beats (Steady State)
-  V = -88.9248;
-  Cai = 1.1366e-04;
-  CaNSR = 1.7519;
-  CaJSR = 1.6213;
-  Nai = 14.1538;
-  Ki = 136.5910;
-  m = 8.0083e-04;
-  h = 0.9931;
-  j = 0.9957;
-  d = 9.8446e-26;
-  f = 0.9998;
-  b = 9.6988e-04;
-  g = 0.9942;
-  xKr = 1.2471e-04;
-  xs1 = 0.0049;
-  xs2 = 0.0243;
-  Jrel = 2.4967e-18;
+  reset(); // Set to initial conditions
 
   // Constants
   // Physical Constants
@@ -106,9 +68,16 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   // Cell Capacitance
   Cm = 1.0;
   // Fixed ionic concentrations
+  // Original concentrations
+  /*
   Ko = 4.5 ; // uM
   Nao = 140 ; // uM
   Cao = 1.8 ; // uM
+  */
+  // Concentration used in dynamic clamp experiments
+  Ko = 5.4 ; // uM
+  Nao = 137; // uM
+  Cao = 2.0 ; // uM
   // Na current constants
   GNa_= 16; // mS/cm^2
   GNab = 0.004;
@@ -450,7 +419,9 @@ void LivRudy2009::reset(){ // Reset to initial conditions
     Jrel = 1e-4;
   */
 
-  // Initial conditions after 700 beats
+  // Initial conditions after 700 beats (Steady State)
+  // Note being used, retained as a reference
+  /*
   V = -88.9248;
   Cai = 1.1366e-04;
   CaNSR = 1.7519;
@@ -468,4 +439,74 @@ void LivRudy2009::reset(){ // Reset to initial conditions
   xs1 = 0.0049;
   xs2 = 0.0243;
   Jrel = 2.4967e-18;
+  */
+
+  // Initial conditions after conc change - 800 beats
+  // Used in dynamic clamp experiments
+  V = -8.185872e+01;
+  Cai = 1.797384e-04;
+  CaNSR = 2.463960e+00;
+  CaJSR = 1.524945e+00;
+  Nai = 1.357382e+01;
+  Ki = 1.239044e+02;
+  m = 2.601169e-03;
+  h = 9.697101e-01;
+  j = 9.806867e-01;
+  d = 5.928788e-322;
+  f = 9.981991e-01;
+  b = 1.866354e-03;
+  g = 9.650771e-01;
+  xKr = 4.291283e-04;
+  xs1 = 2.954278e-02;
+  xs2 = 8.283927e-02;
+  Jrel = 1.101473e-38;
+}
+
+// Condition functions
+void LivRudy2009::setConditions(std::vector<double> &conditions) {
+  if (conditions.size() != 17)
+    std::cout << "Error: 17 conditions are required, " << conditions.size() <<
+        " conditions were given." << std::endl;
+
+  V = conditions.at(0);
+  Cai = conditions.at(1);
+  CaNSR = conditions.at(2);
+  CaJSR = conditions.at(3);
+  Nai = conditions.at(4);
+  Ki = conditions.at(5);
+  m = conditions.at(6);
+  h = conditions.at(7);
+  j = conditions.at(8);
+  d = conditions.at(9);
+  f = conditions.at(10);
+  b = conditions.at(11);
+  g = conditions.at(12);
+  xKr = conditions.at(13);
+  xs1 = conditions.at(14);
+  xs2 = conditions.at(15);
+  Jrel = conditions.at(16);
+}
+
+std::vector<double> LivRudy2009::getConditions() {
+  std::vector<double> conditions;
+
+  conditions.push_back(V);
+  conditions.push_back(Cai);
+  conditions.push_back(CaNSR);
+  conditions.push_back(CaJSR);
+  conditions.push_back(Nai);
+  conditions.push_back(Ki);
+  conditions.push_back(m);
+  conditions.push_back(h);
+  conditions.push_back(j);
+  conditions.push_back(d);
+  conditions.push_back(f);
+  conditions.push_back(b);
+  conditions.push_back(g);
+  conditions.push_back(xKr);
+  conditions.push_back(xs1);
+  conditions.push_back(xs2);
+  conditions.push_back(Jrel);
+
+  return conditions;
 }

@@ -17,7 +17,7 @@ depend: .depend
 -include .depend
 
 $(EXEC): $(OBJFILES) main.cpp
-	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
+	$(CXX) $(CXXFLAGS) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean:
 	-rm -f $(OBJFILES) $(EXEC) .depend
