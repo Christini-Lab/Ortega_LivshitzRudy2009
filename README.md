@@ -40,5 +40,5 @@ Fetch any new changes, then pull changes into subtree directory.
   branch if required
 
 ```sh
-git subtree pull --prefix LivRudy2009/ GivR2009_remote master --squash
+git subtree pull --prefix LivRudy2009/ LivR2009_remote master --squash
 ```
