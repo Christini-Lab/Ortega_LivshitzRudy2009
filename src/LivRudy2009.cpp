@@ -39,6 +39,7 @@
 #define fastEXP RTMath.fastEXP //define shortcut for fastEXP function
 
 LivRudy2009::LivRudy2009(void) { // Model initialization
+
   // Model parameters
   DT = 0.1;
 
@@ -316,7 +317,9 @@ void LivRudy2009::solve(){
 
   // Derivatives for ionic concentration
   dNai = -(INa + INab + ICaL_Na + 3 * INCX + 3 * INaK) * Acap / (Vmyo * F);
-  dKi = -(IKr + IKs + IK1 + IKp + ICaL_K - 2 * INaK) * Acap / (Vmyo * F);
+  // Injected current assumed to be due to potassium flux
+  dKi = -(I_Inject + IKr + IKs + IK1 + IKp + ICaL_K - 2 * INaK) * Acap /
+      (Vmyo * F);
   dCai = Bi * (-Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
                (ICaL + ICaT + ICab + IpCa - 2 * INCX) *
                Acap / (2 * Vmyo * F));
@@ -362,7 +365,7 @@ void LivRudy2009::solve(){
   h += DT * ((hinf - h) / tauh);
   j += DT * ((jinf - j) / tauj);
   m = (minf - (minf - m) *
-       fastEXP(-DT / taum)); //Rush-Larsen approximation used for m gate
+       fastEXP(-DT / taum)); // Rush-Larsen approximation used for m gate
   d += DT * ((dinf - d)/taud);
   f += DT * ((finf - f)/tauf);
   b += DT * ((binf - b) / taub);
@@ -373,55 +376,65 @@ void LivRudy2009::solve(){
 }
 
 // Voltage Clamp Function
-double LivRudy2009::vClamp(double voltage){
+int LivRudy2009::vClamp(double voltage){
   // Clamp model voltage
   V = voltage;
 
   // Run model solver
   solve(); // voltage free to change during this time period
 
-  // Return current
-  return Iion;
+  // Returns 0 if any of the following conditions are out of bounds
+  return (Cai < 0 ||
+          Nai < 0 ||
+          Ki < 0 ||
+          CaJSR < 0 ||
+          CaNSR < 0 ||
+          V < -200 ||
+          V > 200);
 }
 
 // Current Clamp Function
-double LivRudy2009::iClamp(double current){
+int LivRudy2009::iClamp(double current){
   // Inject current into model
   I_Inject = current;
 
   // Run model solver
   solve();
 
-  // Return voltage
-  return V;
+  // Returns 0 if any of the following conditions are out of bounds
+  return (Cai < 0 ||
+          Nai < 0 ||
+          Ki < 0 ||
+          CaJSR < 0 ||
+          CaNSR < 0 ||
+          V < -200 ||
+          V > 200);
 }
 
 // Model Reset Function
 void LivRudy2009::reset(){ // Reset to initial conditions
   // Initial conditions at 0 beats
-  // Not being used, retained as a reference
   /*
-    V = -84.7;
-    Cai = 0.0822e-3;
-    CaNSR = 1.25;
-    CaJSR = 1.25;
-    Nai = 9.71;
-    Ki = 142.82;
-    m = 2.46e-4;
-    h = 0.99869;
-    j = 0.99887;
-    d = 1e-4;
-    f = 0.983;
-    b = 1e-4;
-    g = 0.983;
-    xKr = 0.229;
-    xs1 = 1e-4;
-    xs2 = 1e-4;
-    Jrel = 1e-4;
+  V = -84.7;
+  Cai = 0.0822e-3;
+  CaNSR = 1.25;
+  CaJSR = 1.25;
+  Nai = 9.71;
+  Ki = 142.82;
+  m = 2.46e-4;
+  h = 0.99869;
+  j = 0.99887;
+  d = 1e-4;
+  f = 0.983;
+  b = 1e-4;
+  g = 0.983;
+  xKr = 0.229;
+  xs1 = 1e-4;
+  xs2 = 1e-4;
+  Jrel = 1e-4;
   */
 
   // Initial conditions after 700 beats (Steady State)
-  // Note being used, retained as a reference
   /*
   V = -88.9248;
   Cai = 1.1366e-04;

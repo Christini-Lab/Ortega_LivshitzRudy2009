@@ -60,17 +60,17 @@ class LivRudy2009 {
 
   /*
     Current clamp model
-    Returns voltage
+    Returns 1 if model passed crash tests, 0 if it crashed
     -- current: current injected into model (A)
   */
-  double iClamp(double current);
+  int iClamp(double current);
 
   /*
     Voltage clamp model
-    Returns total current
+     Returns 1 if model passed crash tests, 0 if it crashed
     -- voltage: clamped model voltage (mV)
   */
-  double vClamp(double voltage);
+  int vClamp(double voltage);
 
   /*
     Reset model to initial conditions
@@ -126,6 +126,8 @@ class LivRudy2009 {
   double getGKp() { return GKp_; };
   double getGpCa() { return IpCa_; };
   double getGserca() { return Jserca_; };
+  double getVm() { return V; };
+  double getI() { return Iion; };
 
   /*
     Get conditions
@@ -140,7 +142,7 @@ class LivRudy2009 {
 
   // Loop variable
   int i;
-
+  
   // Lookup Table variables
   double V_min;
   double Vx;
