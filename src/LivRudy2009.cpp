@@ -419,7 +419,7 @@ int LivRudy2009::iClamp(double current) {
 
 // Crash status
 const int LivRudy2009::getStatus() {
-  return (Cai < 0 ||
+  return !(Cai < 0 ||
           Nai < 0 ||
           Ki < 0 ||
           CaJSR < 0 ||
