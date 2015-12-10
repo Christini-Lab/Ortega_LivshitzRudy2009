@@ -377,6 +377,15 @@ void LivRudy2009::solve(){
 
 // Voltage Clamp Function
 int LivRudy2009::vClamp(double voltage){
+  if (Cai < 0 ||
+      Nai < 0 ||
+      Ki < 0 ||
+      CaJSR < 0 ||
+      CaNSR < 0 ||
+      V < -200 ||
+      V > 200)
+    return 0;
+
   // Clamp model voltage
   V = voltage;
 
@@ -384,17 +393,20 @@ int LivRudy2009::vClamp(double voltage){
   solve(); // voltage free to change during this time period
 
   // Returns 0 if any of the following conditions are out of bounds
-  return (Cai < 0 ||
-          Nai < 0 ||
-          Ki < 0 ||
-          CaJSR < 0 ||
-          CaNSR < 0 ||
-          V < -200 ||
-          V > 200);
+  return 1
 }
 
 // Current Clamp Function
 int LivRudy2009::iClamp(double current){
+  if (Cai < 0 ||
+      Nai < 0 ||
+      Ki < 0 ||
+      CaJSR < 0 ||
+      CaNSR < 0 ||
+      V < -200 ||
+      V > 200)
+    return 0;
+
   // Inject current into model
   I_Inject = current;
 
@@ -402,13 +414,7 @@ int LivRudy2009::iClamp(double current){
   solve();
 
   // Returns 0 if any of the following conditions are out of bounds
-  return (Cai < 0 ||
-          Nai < 0 ||
-          Ki < 0 ||
-          CaJSR < 0 ||
-          CaNSR < 0 ||
-          V < -200 ||
-          V > 200);
+  return 1;
 }
 
 // Model Reset Function
