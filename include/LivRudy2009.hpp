@@ -113,6 +113,11 @@ class LivRudy2009 {
   double getDt() const { return DT; };
 
   /*
+    Check crash status
+  */
+  const int getStatus();
+
+  /*
     Get conductances
   */
   double getGKr() { return GKr_; };
@@ -142,7 +147,7 @@ class LivRudy2009 {
 
   // Loop variable
   int i;
-  
+
   // Lookup Table variables
   double V_min;
   double Vx;

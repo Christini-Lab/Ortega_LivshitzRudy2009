@@ -166,7 +166,7 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
     lkup[z][4] = aj / (aj + bj); // jinf
 
     // M-gate
-    if( Vx > -47.14 && Vx < -47.12) // if V = -47.13, divide by 0 error
+    if ( Vx > -47.14 && Vx < -47.12) // if V = -47.13, divide by 0 error
       am = 3.41333;
     else
       am = 0.32 * (Vx + 47.13) / (1 - exp(-0.1 * (Vx + 47.13)));
@@ -178,7 +178,7 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
     dinf_0 = 1 / (1 + exp(-(Vx + 10) / 6.24));
     dinf_1 = 1 / (1 + exp(-(Vx + 60) / 0.024));
     lkup[z][7] = dinf_0 * dinf_1; // dinf
-    if( Vx > -10.01 && Vx < -9.99)// if V = -10, divide by 0 error
+    if ( Vx > -10.01 && Vx < -9.99)// if V = -10, divide by 0 error
       lkup[z][8] = 2.30655; // taud
     else
       lkup[z][8] =  1 / (1 + exp(-(Vx + 10) / 6.24)) *
@@ -202,13 +202,13 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
                    (1 - lambda_g)); // taug
 
     // IKr
-    if( Vx > -30.01 && Vx < -29.99 ) // if V = -30, divide by 0 error
+    if ( Vx > -30.01 && Vx < -29.99 ) // if V = -30, divide by 0 error
       tau_xs1 = 411.501;
     else
       tau_xs1 = 10000 / (0.719 * (Vx + 30) / (1 - exp(-0.148 * (Vx + 30))) +
                          1.31 * (Vx + 30) / (exp(0.0687 * (Vx + 30)) - 1));
     lkup[z][15] = 1 / (1 + exp(-(Vx + 21.5) / 7.5)); // xKrinf
-    if( Vx > -14.21 && Vx < -14.19 ) // if V = -14.2, divide by 0 error
+    if ( Vx > -14.21 && Vx < -14.19 ) // if V = -14.2, divide by 0 error
       lkup[z][16] = 87.1735; // tauxKr
     lkup[z][16] = (1 / (0.00138 * (Vx + 14.2) /
                         (1 - exp(-0.123 * (Vx + 14.2))) + 0.00061 *
@@ -376,7 +376,7 @@ void LivRudy2009::solve(){
 }
 
 // Voltage Clamp Function
-int LivRudy2009::vClamp(double voltage){
+int LivRudy2009::vClamp(double voltage) {
   if (Cai < 0 ||
       Nai < 0 ||
       Ki < 0 ||
@@ -393,11 +393,11 @@ int LivRudy2009::vClamp(double voltage){
   solve(); // voltage free to change during this time period
 
   // Returns 0 if any of the following conditions are out of bounds
-  return 1
+  return 1;
 }
 
 // Current Clamp Function
-int LivRudy2009::iClamp(double current){
+int LivRudy2009::iClamp(double current) {
   if (Cai < 0 ||
       Nai < 0 ||
       Ki < 0 ||
@@ -415,6 +415,17 @@ int LivRudy2009::iClamp(double current){
 
   // Returns 0 if any of the following conditions are out of bounds
   return 1;
+}
+
+// Crash status
+const int LivRudy2009::getStatus() {
+  return (Cai < 0 ||
+          Nai < 0 ||
+          Ki < 0 ||
+          CaJSR < 0 ||
+          CaNSR < 0 ||
+          V < -200 ||
+          V > 200);
 }
 
 // Model Reset Function
