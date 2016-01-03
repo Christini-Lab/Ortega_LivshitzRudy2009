@@ -48,7 +48,13 @@ int main() {
   std::cout << "Starting simulation" << std::endl;
   double voltage;
   double stim = 0;
-  double dt = model.getDt();
+  double dataDt = 0.01; // Dt of data output
+  double maxDt = model.getDt(); // Maximum dt for adaptive timestep
+  double dt = model.getDt(); // Adaptive timestep
+  double dVdt; // dVdt used to modify timestep
+  double dVdtThresh = maxDt * 2; // If Vm changes less than this, set dt to max
+  double v0 = model.getVm(); // Previous timestep voltage
+  int steps = dt / dataDt;
   int bcl = 500; // ms
   int beats = 105;
   int stimAmp = 40; // pA/pF
@@ -62,20 +68,44 @@ int main() {
   int bclCounter = bcl / dt;
   int stimCounter = stimLength / dt;
 
+  // Each time increment is equivalent to dataDt
   for (int time = 0; time < protocolLength; time++) {
-    if (time % bclCounter <= stimCounter)
+    dVdt = std::abs(model.getVm() - v0) / dataDt; // Calculate dVdt
+    v0 = model.getVm();
+
+    // Stimulation
+    if (time % bclCounter <= stimCounter) {
       stim = -1 * stimAmp;
+    }
     else
       stim = 0;
 
-    voltage = model.iClamp(stim);
+    // Adaptive dt calculation
+    if (dVdt < dVdtThresh) {
+      dt = maxDt;
+      model.setDt(dt);
+      steps = dataDt / dt;
+    }
+    else { // dVdt is > than dVdtThresh, so reduce dt
+      steps = std::ceil(dVdt / dVdtThresh); // Round up to integer
 
-    // Voltage check
-    if( isnan(voltage) || voltage < -150 || voltage > 150 ) {
-      std::cout << "Error: voltage out of range" << std::endl;
+      if (steps > maxDt / 0.001)
+        steps = maxDt / 0.001; // Set min dt to 1000kHz
+
+      dt = maxDt / steps;
+      model.setDt(dt);
+    }
+
+    for (int i = 0; i < steps; i++) {
+      model.iClamp(stim);
+    }
+
+    if (model.getStatus()) // If model did not crash, save voltage
+      voltageData.push_back(model.getVm());
+    else { // Model crash
+      std::cout << "ERROR: Model crash" << std::endl;
       break;
     }
-    voltageData.push_back(voltage);
   }
 
   std::cout << "Simulation finished" << std::endl <<

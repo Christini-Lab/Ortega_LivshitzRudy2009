@@ -100,6 +100,15 @@ class LivRudy2009 {
   void setGserca(double new_g) { Jserca_ = new_g; };
 
   /*
+    Set concentrations
+  */
+  void setNai(double new_c) { Nai = new_c; };
+  void setKi(double new_c) { Ki = new_c; };
+  void setCai(double new_c) { Cai = new_c; };
+  void setCaNSR(double new_c) { CaNSR = new_c; };
+  void setCaJSR(double new_c) { CaJSR = new_c; };
+
+  /*
     Set conditions
     -- conditions: array of model state values
   */
