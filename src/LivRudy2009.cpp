@@ -362,8 +362,10 @@ void LivRudy2009::solve(){
   xsinf = (lkup[ilow + 1][19] - lkup[ilow][19]) * linext + lkup[ilow + 1][19];
 
   // Update gating variables - Euler Method
-  h += DT * ((hinf - h) / tauh);
-  j += DT * ((jinf - j) / tauj);
+  h = (hinf - (hinf - h) *
+       fastEXP(-DT / tauh)); // Rush-Larsen approximation used for m gate
+  j = (jinf - (jinf - j) *
+       fastEXP(-DT / tauj)); // Rush-Larsen approximation used for m gate
   m = (minf - (minf - m) *
        fastEXP(-DT / taum)); // Rush-Larsen approximation used for m gate
   d += DT * ((dinf - d)/taud);
