@@ -45,11 +45,6 @@
 int main() {
   LivRudy2009 model;
 
-  model.setCaJSR(1.750159364762647);
-  model.setCaNSR(2.532057846015922);
-  model.setCai(1.955490610952285e-04);
-  model.setKi(1.355909876727634e+02);
-  model.setNai(13.760181381756324);
   std::cout << "Starting simulation" << std::endl;
   double voltage;
   double stim = 0;
