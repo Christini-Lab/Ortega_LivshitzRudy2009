@@ -87,17 +87,20 @@ class LivRudy2009 {
   /*
     Set conductances
   */
+  void setGNa(double new_g) { GNa_ = new_g; };
+  void setGNab(double new_g) { GNab = new_g; };
+  void setGCaL(double new_g) { GCaL_ = new_g; };
+  void setGCaT(double new_g) { GCaT_ = new_g; };
+  void setGCab(double new_g) {GCab_ = new_g; };
+  void setGK1(double new_g) { GK1_ = new_g; };
   void setGKr(double new_g) { GKr_ = new_g; };
   void setGKs(double new_g) { GKs_ = new_g; };
-  void setGCaL(double new_g) { GCaL_ = new_g; };
-  void setGK1(double new_g) { GK1_ = new_g; };
-  void setGCaT(double new_g) { GCaT_ = new_g; };
+  void setGKp(double new_g) { GKp_ = new_g; };
   void setGNaK(double new_g) { INaK_ = new_g; };
   void setGNCX(double new_g) { GNCX_ = new_g; };
-  void setGNa(double new_g) { GNa_ = new_g; };
-  void setGKp(double new_g) { GKp_ = new_g; };
   void setGpCa(double new_g) { IpCa_ = new_g; };
   void setGserca(double new_g) { Jserca_ = new_g; };
+
 
   /*
     Set concentrations
@@ -129,15 +132,17 @@ class LivRudy2009 {
   /*
     Get conductances
   */
+  double getGNa() { return GNa_; };
+  double getGNab() { return GNab; };
+  double getGCaL() { return GCaL_; };
+  double getGCaT() { return GCaT_; };
+  double getGCab() { return GCab_; };
+  double getGK1() { return GK1_; };
   double getGKr() { return GKr_; };
   double getGKs() { return GKs_; };
-  double getGCaL() { return GCaL_; };
-  double getGK1() { return GK1_; };
-  double getGCaT() { return GCaT_; };
+  double getGKp() { return GKp_; };
   double getGNaK() { return INaK_; };
   double getGNCX() { return GNCX_; };
-  double getGNa() { return GNa_; };
-  double getGKp() { return GKp_; };
   double getGpCa() { return IpCa_; };
   double getGserca() { return Jserca_; };
   double getVm() { return V; };
