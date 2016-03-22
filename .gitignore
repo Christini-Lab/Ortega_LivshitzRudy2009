@@ -1,2 +1,4 @@
+.depend
+*.o
 run
 voltage.dat
