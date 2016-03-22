@@ -167,7 +167,7 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
 
     // M-gate
     if ( Vx > -47.14 && Vx < -47.12) // if V = -47.13, divide by 0 error
-      am = 3.41333;
+      am = 3.199985789461998;
     else
       am = 0.32 * (Vx + 47.13) / (1 - exp(-0.1 * (Vx + 47.13)));
     bm = 0.08 * exp(-Vx / 11.0);
@@ -179,7 +179,7 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
     dinf_1 = 1 / (1 + exp(-(Vx + 60) / 0.024));
     lkup[z][7] = dinf_0 * dinf_1; // dinf
     if ( Vx > -10.01 && Vx < -9.99)// if V = -10, divide by 0 error
-      lkup[z][8] = 2.30655; // taud
+      lkup[z][8] = 2.289374849326888; // taud
     else
       lkup[z][8] =  1 / (1 + exp(-(Vx + 10) / 6.24)) *
           (1 - exp(-(Vx + 10) / 6.24))/(0.035 * (Vx + 10)); // taud
@@ -203,13 +203,13 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
 
     // IKr
     if ( Vx > -30.01 && Vx < -29.99 ) // if V = -30, divide by 0 error
-      tau_xs1 = 411.501;
+      tau_xs1 = 417.9441667499822;
     else
       tau_xs1 = 10000 / (0.719 * (Vx + 30) / (1 - exp(-0.148 * (Vx + 30))) +
                          1.31 * (Vx + 30) / (exp(0.0687 * (Vx + 30)) - 1));
     lkup[z][15] = 1 / (1 + exp(-(Vx + 21.5) / 7.5)); // xKrinf
     if ( Vx > -14.21 && Vx < -14.19 ) // if V = -14.2, divide by 0 error
-      lkup[z][16] = 87.1735; // tauxKr
+      lkup[z][16] = 85.830287334611480; // tauxKr
     lkup[z][16] = (1 / (0.00138 * (Vx + 14.2) /
                         (1 - exp(-0.123 * (Vx + 14.2))) + 0.00061 *
                         (Vx + 38.9) / (exp(0.145 *(Vx + 38.9)) -1))); // tauxKr
