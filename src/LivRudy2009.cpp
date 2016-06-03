@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Weill Medical College of Cornell University
+ * Copyright (C) 2016 Weill Medical College of Cornell University
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@
  *
  * LivRudy2009.cpp, v3.0
  *
- * Author: Francis Ortega (v1.0 - 3.0) (2011 - 2015)
+ * Author: Francis Ortega (v1.0 - 3.0) (2011 - 2016)
  *
  *** NOTES
  *
@@ -119,6 +119,7 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   // Pumps and Transporters
   IpCa_ = 1.15; // Max. Ca current through sarcolemmal Ca pump (uA/uF)
   KmpCa = 5e-4; // Half-saturation concentration of sarcolemmal Ca pump (mM)
+  GJrel_ = 1.0; // Jrel scaling factor
   Jserca_ = 1.0; // Jserca scaling factor
   Vserca = 8.75e-3; // mM/ms
   Kmserca = 9.0e-4; // mM
@@ -297,7 +298,8 @@ void LivRudy2009::solve(){
   // Intracellular Ca fluxes
   // SR Ca release, uptake, and leak
   //Jrelinf = alpha_rel * beta_tau * ICaL / (pow((Krel_inf/CaJSR),hrel) + 1);
-  Jrelinf = alpha_rel * beta_tau * ICaL /
+  // Added GJrel_ as a scaling factor
+  Jrelinf = GJrel_ * alpha_rel * beta_tau * ICaL /
       (fastEXP(hrel * log(Krel_inf / CaJSR)) + 1);
   tau_rel = beta_tau / (Krel_tau / CaJSR + 1);
   dJreldt = - (Jrelinf + Jrel) / tau_rel;

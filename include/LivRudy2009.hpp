@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Weill Medical College of Cornell University
+ * Copyright (C) 2016 Weill Medical College of Cornell University
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@
  *
  * LivRudy2009.h, v3.0
  *
- * Author: Francis Ortega (v1.0-3.0)(2011)
+ * Author: Francis Ortega (v1.0-3.0)(2011 - 2016)
  *
  *** NOTES
  *
@@ -98,9 +98,9 @@ class LivRudy2009 {
   void setGKp(double new_g) { GKp_ = new_g; };
   void setGNaK(double new_g) { INaK_ = new_g; };
   void setGNCX(double new_g) { GNCX_ = new_g; };
+  void setGJrel(double new_g) { GJrel_ = new_g; };
   void setGpCa(double new_g) { IpCa_ = new_g; };
   void setGserca(double new_g) { Jserca_ = new_g; };
-
 
   /*
     Set concentrations
@@ -143,6 +143,7 @@ class LivRudy2009 {
   double getGKp() { return GKp_; };
   double getGNaK() { return INaK_; };
   double getGNCX() { return GNCX_; };
+  double getGJrel() { return GJrel_; };
   double getGpCa() { return IpCa_; };
   double getGserca() { return Jserca_; };
   double getVm() { return V; };
@@ -153,6 +154,26 @@ class LivRudy2009 {
     Returns double array of model state values
   */
   std::vector<double> getConditions();
+
+  /*
+    Get current values
+  */
+  double getITotal() { return Iion; };
+  double getINa() { return INa; };
+  double getINab() { return INab; };
+  double getICaL() { return ICaL; };
+  double getICaL_Na() { return ICaL_Na; };
+  double getICaL_K() { return ICaL_K; };
+  double getICab() { return ICab; };
+  double getICaT() { return ICaT; };
+  double getIpCa() { return IpCa; };
+  double getIKr() { return IKr; };
+  double getIKs() { return IKs; };
+  double getIK1() { return IK1; };
+  double getIKp() { return IKp; };
+  double getINCX() { return INCX; };
+  double getINaK() { return INaK; };
+  double getI_Inject() { return I_Inject; };
 
  private:
   RealTimeMath RTMath;
@@ -326,6 +347,7 @@ class LivRudy2009 {
   double tau_transfer;
   double kNCX;
   double GNCX_; // Added scaling parameter, nominal value = 1.0
+  double GJrel_; // Added scaling parameter, nominal value = 1.0
 
   // Buffers in cytosol
   double TRPNtot;
