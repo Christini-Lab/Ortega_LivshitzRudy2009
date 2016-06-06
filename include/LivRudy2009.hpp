@@ -175,6 +175,15 @@ class LivRudy2009 {
   double getINaK() { return INaK; };
   double getI_Inject() { return I_Inject; };
 
+  /*
+    Get internal concentrations
+  */
+  double getNai() { return Nai; };
+  double getKi() { return Ki; };
+  double getCai() { return Cai; };
+  double getCaJSR() { return CaJSR; };
+  double getCaNSR() { return CaNSR; };
+
  private:
   RealTimeMath RTMath;
 
