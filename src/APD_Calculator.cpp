@@ -1,10 +1,29 @@
 #include "../include/APD_Calculator.hpp"
-
+#include <iostream>
+// Constructor
 APD_Calculator::APD_Calculator(double vRm, double n_dt, int psw, double ut,
                                int repol) :
     vmRest(vRm), dt(n_dt), peakSearchWindow(psw), upstrokeThreshold(ut),
     repolarizationPercent(repol) {};
 
+// Reset algorithm and apd data vector
+void APD_Calculator::reset() {
+  mode = APDMode::SEARCH;
+  apd.clear();
+}
+
+// Return most recent action potential duration calculated
+double APD_Calculator::get_apd() {
+  return apd.back();
+}
+
+// Return most recent action potential duration calculated
+std::vector<double> APD_Calculator::get_apd(int num) {
+  std::vector<double> retval(apd.end() - num, apd.end() - 1);
+  return retval;
+}
+
+// Push voltage in real-time to APD calculating algorithm
 APD_Calculator::APDMode APD_Calculator::push_voltage(double voltage) {
   switch (mode) {
     case APDMode::SEARCH:
@@ -46,4 +65,5 @@ APD_Calculator::APDMode APD_Calculator::push_voltage(double voltage) {
       }
       break;
   }
+  steps++; // Increment data counter
 }

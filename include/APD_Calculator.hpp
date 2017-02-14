@@ -58,6 +58,22 @@ class APD_Calculator {
   double get_apd();
 
   /*
+    Return most recent number of action potential durations
+    -- num: number of most recent APs to retrieve
+  */
+  std::vector<double> get_apd(int num);
+
+  /*
+    Return all action potential durations
+  */
+  std::vector<double> get_all_apd() { return apd; };
+
+  /*
+    Return length of APD data vector
+  */
+  int get_apd_length() { return apd.size(); };
+
+  /*
     Set time increment of data
     -- new_dt: time increment (ms)
   */

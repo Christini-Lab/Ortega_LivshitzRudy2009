@@ -70,9 +70,7 @@ int main() {
   int stimCounter = stimLength / dt;
 
   // APD calculation class initialization
-  APD_Calculator apdCalc;
-  apdCalc.set_dt(dt);
-  std::vector<double> apdData;
+  APD_Calculator apdCalc(model.getVm(), dt);
 
   // Each time increment is equivalent to dataDt
   for (int time = 0; time < protocolLength; time++) {
@@ -111,8 +109,6 @@ int main() {
 
       // Push voltage to APD calculator
       apdCalc.push_voltage(model.getVm());
-      // If end of APD found, save APD
-      //apdData.push_back(apdCalc.get_apd());
     }
     else { // Model crash
       std::cout << "ERROR: Model crash" << std::endl;
@@ -134,10 +130,18 @@ int main() {
     std::cout << *it << std::endl;
   }
 
-  // Data output
+  // Voltage data output
   std::ofstream dataFile("voltage.dat");
   dataFile << std::setprecision(12);
   std::copy(voltageData.begin(), voltageData.end(),
+            std::ostream_iterator<double>(dataFile,"\n"));
+  dataFile.close();
+
+  // APD data output
+  std::vector<double> apdData(apdCalc.get_all_apd());
+  dataFile.open("apd.dat");
+  dataFile << std::setprecision(6);
+  std::copy(apdData.begin(), apdData.end(),
             std::ostream_iterator<double>(dataFile,"\n"));
   dataFile.close();
 }
