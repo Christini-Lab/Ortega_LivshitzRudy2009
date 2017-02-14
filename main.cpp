@@ -41,6 +41,7 @@
 #include <iterator>
 
 #include "include/LivRudy2009.hpp"
+#include "include/APD_Calculator.hpp"
 
 int main() {
   LivRudy2009 model;
@@ -67,6 +68,11 @@ int main() {
   // Unitless to prevent rounding errors
   int bclCounter = bcl / dt;
   int stimCounter = stimLength / dt;
+
+  // APD calculation class initialization
+  APD_Calculator apdCalc;
+  apdCalc.set_dt(dt);
+  std::vector<double> apdData;
 
   // Each time increment is equivalent to dataDt
   for (int time = 0; time < protocolLength; time++) {
@@ -100,8 +106,14 @@ int main() {
       model.iClamp(stim);
     }
 
-    if (model.getStatus()) // If model did not crash, save voltage
+    if (model.getStatus()) { // If model did not crash, save voltage
       voltageData.push_back(model.getVm());
+
+      // Push voltage to APD calculator
+      apdCalc.push_voltage(model.getVm());
+      // If end of APD found, save APD
+      //apdData.push_back(apdCalc.get_apd());
+    }
     else { // Model crash
       std::cout << "ERROR: Model crash" << std::endl;
       break;
