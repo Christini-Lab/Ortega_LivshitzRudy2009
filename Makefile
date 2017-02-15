@@ -1,23 +1,24 @@
 CXXFLAGS += -O2 -std=c++11 -g
+OUTPUT_OPTION = -MMD -MP -o $@
 LFLAGS =
 LIBS =
 
-SRCFILES := $(wildcard src/*.cpp) main.cpp
-OBJFILES := $(patsubst %.cpp,%.o,$(wildcard src/*.cpp))
+EXE = Model_Simulation
+EXE_SRC = exe/model_sim.cpp
 
-EXEC = run
-
-all: $(EXEC)
 .PHONY: all clean
+all: $(EXE)
 
-# Automatically determine dependencies of source files
-depend: .depend
-.depend: $(SRCFILES)
-	$(CXX) $(CXXFLAGS) -MM $^ > ./.depend;
--include .depend
+MODEL_SRC = $(wildcard src/*.cpp)
 
-$(EXEC): $(OBJFILES) main.cpp
+# Dependencies are automatically generated
+SRC := $(MODEL_SRC) $(EXE_SRC)
+OBJ := $(SRC:.cpp=.o)
+DEP := $(SRC:.cpp=.d)
+-include $(DEP)
+
+$(EXE): $(OBJ)
 	$(CXX) $(CXXFLAGS) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean:
-	-rm -f $(OBJFILES) $(EXEC) .depend
+	-rm -f $(OBJ) $(EXE) $(DEP)

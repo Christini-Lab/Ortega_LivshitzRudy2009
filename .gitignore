@@ -1,5 +1,5 @@
-.depend
+*.d
 *.o
-run
+Model_Simulation
 voltage.dat
 apd.dat
