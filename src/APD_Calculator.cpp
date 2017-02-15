@@ -17,9 +17,9 @@ double APD_Calculator::get_apd() {
   return apd.back();
 }
 
-// Return most recent action potential duration calculated
+// Return most recent num action potentials duration calculated
 std::vector<double> APD_Calculator::get_apd(int num) {
-  std::vector<double> retval(apd.end() - num, apd.end() - 1);
+  std::vector<double> retval(apd.end() - num, apd.end());
   return retval;
 }
 
