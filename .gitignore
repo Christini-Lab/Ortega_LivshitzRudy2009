@@ -1,5 +1,6 @@
 *.d
 *.o
 Model_Simulation
+Restitution_Portrait
 voltage.dat
 apd.dat
