@@ -5,7 +5,7 @@
 This version of the Livshitz Rudy 2009 guinea pig ventricular model has been
 modified for real-time performance in a dynamic clamp setting.
 
-This repository is intendent to be used as a subtree. Follow the directions
+This repository is intended to be used as a subtree. Follow the directions
 below to add/update the model to your repository.
 
 ### Subtree installation:
