@@ -5,8 +5,8 @@
 This version of the Livshitz Rudy 2009 guinea pig ventricular model has been
 modified for real-time performance in a dynamic clamp setting.
 
-This repository is intended to be used as a subtree. Follow the directions
-below to add/update the model to your repository.
+This repository can be used as a subtree. Follow the directions below to
+add/update the model to your repository.
 
 ### Running Simulations
 Simulation protocols are located in the 'exe' directory. Compile and run the
