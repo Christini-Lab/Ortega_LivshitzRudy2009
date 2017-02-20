@@ -3,7 +3,7 @@
 
 ###
 # Cluster array script for running multiple IKs/IKr ratios. Array should have
-# have range of 0-40.
+# have range of 1-41.
 ###
 
 # This script is meant to be run as an array job. SGE_TASK_ID should exist if
@@ -41,7 +41,8 @@ IKrArray=(0.0512653261862278 0.0456645695789169 0.0413800525225716 \
 0.0118916468307963 0.0116862269435621 0.0114357419947197 0.0112468638399465 \
 0.0110085257009155 0.0107993924648954)
 
-IDX=$SGE_TASK_ID
+# Task ID can't be 0, but array starts at index of 0
+IDX=$SGE_TASK_ID-1
 
 echo "Starting Restitution Protocol Simulation: Run $IDX"
 echo "IKs: ${IKsArray[$IDX]}"

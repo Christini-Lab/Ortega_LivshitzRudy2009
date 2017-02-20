@@ -15,6 +15,6 @@ end.
   * **IKs_IKr_Restitution** - Script to run all ratios on a local machine. This
   script is intended to be an example, and is not realistic to run due to its
   long computation time.
-  * **IKs_IKr_Restitution_Cluster_Array** - Script for the PBTech compute
+  * **IKs_IKr_Restitution_Cluster** - Script for the PBTech compute
   cluster. This is intended to be run as an array job, where a single core
   runs a simulation on a single ratio.
