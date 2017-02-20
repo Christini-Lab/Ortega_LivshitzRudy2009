@@ -59,9 +59,9 @@ int main() {
   int stimLength = 1; // ms
 
   // Restitution portrait parameters
-  int startBCL = 500; // Starting BCL (ms)
-  int endBCL = 40; // Desired ending BCL (ms)
-  int incrementBCL = 20; // BCL change (ms)
+  int startBCL = 3000; // Starting BCL (ms)
+  int endBCL = 10; // Desired ending BCL (ms)
+  int incrementBCL = 5; // BCL change (ms)
   int numBeatsPerBCL = 100; // Number of stimulations for a BCL
   int numApdSave = 10; // Number of APDs to save for each BCL
 
@@ -76,9 +76,16 @@ int main() {
 
   // Repeat protocol for every desired BCL, decrementing until end is reach
   for (int bcl = startBCL; bcl >= endBCL; bcl -= incrementBCL) {
+    // Initial BCL is 1000 beats to ensure steady-state of model
+    int beats;
+    if (bcl == startBCL)
+      beats = 1000;
+    else
+      beats = numBeatsPerBCL;
+
     int beatCount = 0;
     int bclCounter = bcl / dt; // Unitless to prevent rounding errors
-    int protocolLength = numBeatsPerBCL * bcl / dt;
+    int protocolLength = beats * bcl / dt;
     std::cout << "BCL: " << bcl << std::endl;
     // Each time increment is equivalent to dataDt
     for (int time = 0; time < protocolLength; time++) {
@@ -123,7 +130,7 @@ int main() {
 
     // Check for block, by checking if each stimulation produced an AP, if
     // not, skip BCL
-    if (apdCalc.get_apd_length() != numBeatsPerBCL)
+    if (apdCalc.get_apd_length() != beats)
       break;
     // Save last x APDs along with corresponding BCL
     std::vector<double> tmp(apdCalc.get_apd(numApdSave));
