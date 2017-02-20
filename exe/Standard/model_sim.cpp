@@ -27,7 +27,7 @@
  *
  *** NOTES
  *
- * Example main which runs simple 5 beat pace simulation and outputs it to
+ * Example main which runs simple 500 beat pace simulation and outputs it to
  * 'voltage.dat'.
  *
  ***/
@@ -40,8 +40,8 @@
 #include <algorithm>
 #include <iterator>
 
-#include "../include/LivRudy2009.hpp"
-#include "../include/APD_Calculator.hpp"
+#include "../../include/LivRudy2009.hpp"
+#include "../../include/APD_Calculator.hpp"
 
 int main() {
   LivRudy2009 model;
@@ -57,7 +57,7 @@ int main() {
   double v0 = model.getVm(); // Previous timestep voltage
   int steps = dt / dataDt;
   int bcl = 500; // ms
-  int beats = 105;
+  int beats = 500;
   int stimAmp = 40; // pA/pF
   int stimLength = 1; // ms
 

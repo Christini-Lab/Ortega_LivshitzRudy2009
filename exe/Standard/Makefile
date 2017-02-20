@@ -4,12 +4,12 @@ LFLAGS =
 LIBS =
 
 EXE = Model_Simulation
-EXE_SRC = exe/model_sim.cpp
+EXE_SRC = model_sim.cpp
 
 .PHONY: all clean
 all: $(EXE)
 
-MODEL_SRC = $(wildcard src/*.cpp)
+MODEL_SRC = $(wildcard ../../src/*.cpp)
 
 # Dependencies are automatically generated
 SRC := $(MODEL_SRC) $(EXE_SRC)

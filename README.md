@@ -8,6 +8,10 @@ modified for real-time performance in a dynamic clamp setting.
 This repository is intended to be used as a subtree. Follow the directions
 below to add/update the model to your repository.
 
+### Running Simulations
+Simulation protocols are located in the 'exe' directory. Compile and run the
+corresponding executable to start simulation.
+
 ### Subtree installation:
 
 Enter your local Git project
