@@ -146,9 +146,9 @@ int main() {
   dataFile << std::setprecision(8);
   auto itA = apdData.begin();
   auto itB = bclData.begin();
-  dataFile << "APD BCL" << std::endl;
+  dataFile << "APD,BCL" << std::endl;
   while (itA != apdData.end() || itB != bclData.end()) {
-    dataFile << *itA << " " << *itB << std::endl;
+    dataFile << *itA << "," << *itB << std::endl;
     ++itA;
     ++itB;
   }

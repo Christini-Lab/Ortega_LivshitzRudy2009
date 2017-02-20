@@ -6,7 +6,7 @@ library(plyr)
 library(extrafont)
 
 data.input <-
-  read.table('../APD_BCL.dat', header = TRUE, sep = " ")
+  read.table('../APD_BCL.dat', header = TRUE, sep = ",")
 
 data.plot <- data.frame(
   apd = data.input$APD,
