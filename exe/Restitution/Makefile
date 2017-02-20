@@ -4,7 +4,7 @@ LFLAGS =
 LIBS =
 
 EXE = Restitution_Portrait
-EXE_SRC = exe/model_sim.cpp
+EXE_SRC = model_sim.cpp
 
 .PHONY: all clean
 all: $(EXE)

@@ -39,8 +39,8 @@
 #include <algorithm>
 #include <iterator>
 
-#include "../../../include/LivRudy2009.hpp"
-#include "../../../include/APD_Calculator.hpp"
+#include "../../include/LivRudy2009.hpp"
+#include "../../include/APD_Calculator.hpp"
 
 int main() {
   LivRudy2009 model;
