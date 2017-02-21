@@ -23,14 +23,17 @@
  *
  * model_sim.cpp, v1.0
  *
- * Author: Francis Ortega (v1.0) (2017)
+ * Author: Francis Ortega (v1.1) (2017)
  *
  *** NOTES
  *
  * Restitution portrait simulation specifically for exploring the impact of
  * IKs/IKr ratio.
  *
- * Arguments: IKs conductance, IKr conductance, data output file
+ * Arguments: Start BCL, End BCL, Increment BCL, IKs conductance,
+ * IKr conductance, data output file
+ *
+ * v1.1 - Added start, ending, and increment BCL as arguments
  *
  ***/
 
@@ -46,16 +49,17 @@
 #include "../../include/APD_Calculator.hpp"
 
 int main(int argc, char *argv[]) {
-  // Arguments: IKs conductance, IKr conductance, data output file
-  if (argc != 4) {
+  // Arguments: Start BCL, End BCL, Increment BCL, IKs conductance,
+  // IKr conductance, data output file
+  if (argc != 7) {
     std::cout << "Error: invalid number of arguments: " << argc <<
-        " instead of " << 3 << std::endl;
+        " instead of " << 6 << std::endl;
     return EXIT_FAILURE;
   }
 
   LivRudy2009 model;
-  model.setGKs(atof(argv[1]));
-  model.setGKr(atof(argv[2]));
+  model.setGKs(atof(argv[4]));
+  model.setGKr(atof(argv[5]));
   std::cout << "Starting restitution portrait simulation" << std::endl;
   double voltage;
   double stim = 0;
@@ -70,10 +74,10 @@ int main(int argc, char *argv[]) {
   int stimLength = 1; // ms
 
   // Restitution portrait parameters
-  int startBCL = 3000; // Starting BCL (ms)
-  int endBCL = 10; // Desired ending BCL (ms)
-  int incrementBCL = 5; // BCL change (ms)
-  int numBeatsPerBCL = 100; // Number of stimulations for a BCL
+  int startBCL = atof(argv[1]); // Starting BCL (ms)
+  int endBCL = atof(argv[2]); // Desired ending BCL (ms)
+  int incrementBCL = atof(argv[3]); // BCL change (ms)
+  int numBeatsPerBCL = 2000; // Number of stimulations for a BCL
   int numApdSave = 10; // Number of APDs to save for each BCL
 
   // Data structures for output
@@ -85,12 +89,15 @@ int main(int argc, char *argv[]) {
   // APD calculation class initialization
   APD_Calculator apdCalc(model.getVm(), dt);
 
+  bool done = false; // Flag for loop
+  int bcl = startBCL;
+
   // Repeat protocol for every desired BCL, decrementing until end is reach
-  for (int bcl = startBCL; bcl >= endBCL; bcl -= incrementBCL) {
+  while (!done) {
     // Initial BCL is 1000 beats to ensure steady-state of model
     int beats;
     if (bcl == startBCL)
-      beats = 1000;
+      beats = 2000;
     else
       beats = numBeatsPerBCL;
 
@@ -148,12 +155,19 @@ int main(int argc, char *argv[]) {
     apdData.insert(apdData.end(), tmp.begin(), tmp.end());
     apdCalc.reset(); // Reset apd calculator data
     std::fill_n(std::back_inserter(bclData), numApdSave, bcl);
+
+    if (bcl == endBCL) // Finished
+      break;
+    else if (startBCL > endBCL) // BCL intended to decrement
+      bcl -= incrementBCL;
+    else if (startBCL < endBCL) // BCL intended to increment
+      bcl += incrementBCL;
   }
 
   std::cout << "Simulation finished" << std::endl;
 
   // APD and BCL data output
-  std::ofstream dataFile(argv[3]);
+  std::ofstream dataFile(argv[6]);
   auto itA = apdData.begin();
   auto itB = bclData.begin();
   double ratio = model.getGKs() / model.getGKr();

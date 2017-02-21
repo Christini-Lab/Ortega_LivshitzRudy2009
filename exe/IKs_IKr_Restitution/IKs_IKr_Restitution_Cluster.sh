@@ -70,9 +70,15 @@ LOG_FILE=IKs_IKr_Data_$IDX.log
 
 chmod a+x $SIM_EXEC
 
+# Simulation Variables
+StartBCL=3000
+EndBCL=10
+IncrementBCL=5
+
 # Run simulation
-echo $SIM_EXEC ${IKsArray[$IDX]} ${IKrArray[$IDX]} $DATA_FILE
-$SIM_EXEC ${IKsArray[$IDX]} ${IKrArray[$IDX]} $DATA_FILE 1>> $LOG_FILE
+echo $SIM_EXEC $StartBCL $EndBCL $IncrementBCL ${IKsArray[$IDX]} ${IKrArray[$IDX]} $DATA_FILE
+$SIM_EXEC $StartBCL $EndBCL $IncrementBCL ${IKsArray[$IDX]} ${IKrArray[$IDX]} \
+          $DATA_FILE 1>> $LOG_FILE
 echo "Simulation complete"
 
 echo "Copying files to home directory"

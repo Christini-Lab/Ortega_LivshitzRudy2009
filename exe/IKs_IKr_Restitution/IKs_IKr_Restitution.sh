@@ -29,7 +29,12 @@ IKrArray=(0.0512653261862278 0.0456645695789169 0.0413800525225716 \
 0.0118916468307963 0.0116862269435621 0.0114357419947197 0.0112468638399465 \
 0.0110085257009155 0.0107993924648954)
 
+StartBCL=3000
+EndBCL=10
+IncrementBCL=5
+
 for ((i=0;i<${#IKsArray[@]};++i)); do
     printf "IKs: %s IKr: %s\n" "${IKsArray[i]}" "${IKrArray[i]}"
-    ./IKs_IKr_Restitution ${IKsArray[i]} ${IKrArray[i]} data_$i.dat
+    ./IKs_IKr_Restitution $StartBCL $EndBCL $IncrementBCL \
+                          ${IKsArray[i]} ${IKrArray[i]} data_$i.dat
 done
