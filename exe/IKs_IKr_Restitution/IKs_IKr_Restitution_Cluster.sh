@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#$ -l h_vmem=250M
+#$ -l h_vmem=1G
 
 ###
 # Cluster array script for running multiple IKs/IKr ratios. Array should have
