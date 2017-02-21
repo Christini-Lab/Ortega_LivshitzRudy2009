@@ -2,5 +2,6 @@
 *.o
 Model_Simulation
 Restitution_Portrait
-voltage.dat
-apd.dat
+IKs_IKr_Restitution
+*.dat
+*.pdf
