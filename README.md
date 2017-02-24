@@ -27,7 +27,7 @@ Add remote URL of the model to your local project.
 git remote add -f LivR2009_remote https://pbtech-vc.med.cornell.edu/git/fro2002/dynclamp_livr2009_model.git
 ```
 
-Add genetic algorithm as a subtree of the project.
+Add model as a subtree of the project.
   * **--prefix LivRudy2009/** - prefix denotes the directory you wish to
   put the model in, you can change this
   * **LivR2009_remote** - Model remote repository set earlier
@@ -37,7 +37,7 @@ Add genetic algorithm as a subtree of the project.
 git subtree add --prefix LivRudy2009/ LivR2009_remote master --squash
 ```
 
-### Updating the Genetic_Algorithm subtree:
+### Updating the model subtree:
 Fetch any new changes, then pull changes into subtree directory.
   * **--prefix LivRudy2009/** - Specify the model directory
   * **LivR2009_remote** - Model remote repository you will pull changes from
