@@ -49,7 +49,8 @@ int main() {
   std::cout << "Starting simulation" << std::endl;
   double voltage;
   double stim = 0;
-  double dataDt = 0.1; // Dt of data output
+  double dataDt = 0.2; // Dt of data output
+  double dataTime = 0;
   double maxDt = model.getDt(); // Maximum dt for adaptive timestep
   double dt = model.getDt(); // Adaptive timestep
   double dVdt; // dVdt used to modify timestep
@@ -62,8 +63,8 @@ int main() {
   int stimLength = 1; // ms
 
   int protocolLength = beats * bcl / dt;
-  std::vector<double> voltageData;
-  voltageData.reserve(protocolLength);
+  std::vector< std::vector<double> >
+      data(5, std::vector<double>(protocolLength));
 
   // Unitless to prevent rounding errors
   int bclCounter = bcl / dt;
@@ -104,11 +105,18 @@ int main() {
       model.iClamp(stim);
     }
 
-    if (model.getStatus()) { // If model did not crash, save voltage
-      voltageData.push_back(model.getVm());
+    if (model.getStatus()) { // If model did not crash, save data
+      data.at(0).at(time) = dataTime; // Time
+      data.at(1).at(time) = model.getVm(); // Voltage
+      data.at(2).at(time) = model.getNai(); // Intracellular Na
+      data.at(3).at(time) = model.getKi(); // Intracellular K
+      data.at(4).at(time) = model.getCai(); // Intracellular Ca
 
       // Push voltage to APD calculator
       apdCalc.push_voltage(model.getVm());
+
+      // Increment data time
+      dataTime += dataDt;
     }
     else { // Model crash
       std::cout << "ERROR: Model crash" << std::endl;
@@ -116,13 +124,15 @@ int main() {
     }
   }
 
-  std::cout << "Simulation finished" << std::endl <<
-      "Min element: " <<
-      *std::min_element(voltageData.begin(), voltageData.end()) << std::endl <<
-      "Max element: " <<
-      *std::max_element(voltageData.begin(), voltageData.end()) << std::endl <<
-      "Simulation length: " <<
-      voltageData.size() << std::endl;
+  std::cout << "Simulation finished" << std::endl
+            << "Min voltage: "
+            << *std::min_element(data.at(1).begin(), data.at(1).end())
+            << std::endl
+            << "Max voltage: "
+            << *std::max_element(data.at(1).begin(), data.at(1).end())
+            << std::endl
+            << "Simulation length: "
+            << data.at(0).size() << std::endl;
 
   std::vector<double> conditions(model.getConditions());
   std::cout << "Conditions at end of simulation: " << std::endl;
@@ -130,14 +140,19 @@ int main() {
     std::cout << *it << std::endl;
   }
 
-  // Voltage data output
-  std::ofstream dataFile("voltage.dat");
-  dataFile << std::setprecision(12);
-  std::copy(voltageData.begin(), voltageData.end(),
-            std::ostream_iterator<double>(dataFile,"\n"));
+  // Data output
+  std::ofstream dataFile("data.dat");
+  dataFile << "Time,Voltage,Nai,Ki,Cai" << std::endl;
+  dataFile << std::setprecision(8);
+  for (int idx = 0; idx < protocolLength; idx++)
+    dataFile << data.at(0).at(idx) << ","
+             << data.at(1).at(idx) << ","
+             << data.at(2).at(idx) << ","
+             << data.at(3).at(idx) << ","
+             << data.at(4).at(idx) << std::endl;
   dataFile.close();
 
-  // APD data output
+  // APD data output, seperate output since it is by beat
   std::vector<double> apdData(apdCalc.get_all_apd());
   dataFile.open("apd.dat");
   dataFile << std::setprecision(6);
