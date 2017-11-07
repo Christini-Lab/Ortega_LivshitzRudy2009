@@ -51,14 +51,11 @@ int main() {
   double stim = 0;
   double dataDt = 0.2; // Dt of data output
   double dataTime = 0;
-  double maxDt = model.getDt(); // Maximum dt for adaptive timestep
-  double dt = model.getDt(); // Adaptive timestep
-  double dVdt; // dVdt used to modify timestep
-  double dVdtThresh = maxDt * 2; // If Vm changes less than this, set dt to max
-  double v0 = model.getVm(); // Previous timestep voltage
-  int steps = dt / dataDt;
+  double dt = 0.001;
+  model.setDt(dt);
+  int steps = dataDt / dt;
   int bcl = 500; // ms
-  int beats = 500;
+  int beats = 10;
   int stimAmp = 40; // pA/pF
   int stimLength = 1; // ms
 
@@ -75,31 +72,11 @@ int main() {
 
   // Each time increment is equivalent to dataDt
   for (int time = 0; time < protocolLength; time++) {
-    dVdt = std::abs(model.getVm() - v0) / dataDt; // Calculate dVdt
-    v0 = model.getVm();
 
-    // Stimulation
-    if (time % bclCounter <= stimCounter) {
+    if (time % bclCounter < stimCounter)
       stim = -1 * stimAmp;
-    }
     else
       stim = 0;
-
-    // Adaptive dt calculation
-    if (dVdt < dVdtThresh) {
-      dt = maxDt;
-      model.setDt(dt);
-      steps = dataDt / dt;
-    }
-    else { // dVdt is > than dVdtThresh, so reduce dt
-      steps = std::ceil(dVdt / dVdtThresh); // Round up to integer
-
-      if (steps > dataDt / 0.001)
-        steps = dataDt / 0.001; // Set min dt to 1000kHz
-
-      dt = dataDt / steps;
-      model.setDt(dt);
-    }
 
     for (int i = 0; i < steps; i++) {
       model.iClamp(stim);
@@ -108,7 +85,7 @@ int main() {
     if (model.getStatus()) { // If model did not crash, save data
       data.at(0).at(time) = dataTime; // Time
       data.at(1).at(time) = model.getVm(); // Voltage
-      data.at(2).at(time) = model.getNai(); // Intracellular Na
+      data.at(2).at(time) = stim; // Intracellular Na
       data.at(3).at(time) = model.getKi(); // Intracellular K
       data.at(4).at(time) = model.getCai(); // Intracellular Ca
 
