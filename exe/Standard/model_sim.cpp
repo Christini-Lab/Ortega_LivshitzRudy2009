@@ -62,16 +62,16 @@ int main() {
   int stimAmp = 40; // pA/pF
   int stimLength = 1; // ms
 
-  int protocolLength = beats * bcl / dt;
+  int protocolLength = beats * bcl / dataDt;
   std::vector< std::vector<double> >
       data(5, std::vector<double>(protocolLength));
 
   // Unitless to prevent rounding errors
-  int bclCounter = bcl / dt;
-  int stimCounter = stimLength / dt;
+  int bclCounter = bcl / dataDt;
+  int stimCounter = stimLength / dataDt;
 
   // APD calculation class initialization
-  APD_Calculator apdCalc(model.getVm(), dt);
+  APD_Calculator apdCalc(model.getVm(), dataDt);
 
   // Each time increment is equivalent to dataDt
   for (int time = 0; time < protocolLength; time++) {
@@ -94,10 +94,10 @@ int main() {
     else { // dVdt is > than dVdtThresh, so reduce dt
       steps = std::ceil(dVdt / dVdtThresh); // Round up to integer
 
-      if (steps > maxDt / 0.001)
-        steps = maxDt / 0.001; // Set min dt to 1000kHz
+      if (steps > dataDt / 0.001)
+        steps = dataDt / 0.001; // Set min dt to 1000kHz
 
-      dt = maxDt / steps;
+      dt = dataDt / steps;
       model.setDt(dt);
     }
 
@@ -140,7 +140,7 @@ int main() {
     std::cout << *it << std::endl;
   }
 
-  // Data output
+  Data output
   std::ofstream dataFile("data.dat");
   dataFile << "Time,Voltage,Nai,Ki,Cai" << std::endl;
   dataFile << std::setprecision(8);
@@ -153,6 +153,7 @@ int main() {
   dataFile.close();
 
   // APD data output, seperate output since it is by beat
+  std::ofstream dataFile;
   std::vector<double> apdData(apdCalc.get_all_apd());
   dataFile.open("apd.dat");
   dataFile << std::setprecision(6);
