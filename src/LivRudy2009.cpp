@@ -37,6 +37,7 @@
 #include "../include/LivRudy2009.hpp"
 
 #define fastEXP RTMath.fastEXP //define shortcut for fastEXP function
+//#define fastEXP exp
 
 LivRudy2009::LivRudy2009(void) { // Model initialization
 
@@ -135,93 +136,9 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   // Buffers in JSR
   CSQNtot = 10;
   KmCSQN = 0.8;
-
-  // Gating Variable Lookup Table
-  lkup = new double[20000][20];
-  Vx = 0; // Voltage placeholder for lookup table
-  V_min = -1000;
-
-  // Lookup Table Initialization
-  for (z = 0; z < 20000; z++) {
-    Vx = V_min + 0.1 * z;
-
-    // Voltage
-    lkup[z][0] = V_min + 0.1 * z;
-
-    // H-gate
-    lambda_na = 1 - 1 / (1 + exp(-(Vx + 40) / 0.024));
-    ah = lambda_na * 0.135 * exp(-(80 + Vx) / 6.8);
-    bh = (1 - lambda_na) / (0.13 * (1 + exp((Vx + 10.66)/(-11.1)))) +
-        lambda_na * (3.56 * exp(0.079 * Vx) + 3.1 * 1e5 * exp(0.35 * Vx));
-    lkup[z][1] = ah / (ah + bh); // hinf
-    lkup[z][2] = 1 / (ah + bh); // tauh
-
-    // J-gate
-    aj =  lambda_na *
-        (-1.2714e5 * exp(0.2444 * Vx) - 3.474e-5 * exp(-0.04391 * Vx)) *
-        (Vx + 37.78) / (1 + exp(0.311 * (Vx + 79.23)));
-    bj = (1 - lambda_na) *
-        (0.3 * exp(-2.535e-7 * Vx) / (1 + exp(-0.1 * (Vx + 32)))) + lambda_na *
-        (0.1212 * exp(-0.01052 * Vx) / (1 + exp(-0.1378 * (Vx + 40.14))));
-    lkup[z][3] = 1 / (aj + bj); // tauj
-    lkup[z][4] = aj / (aj + bj); // jinf
-
-    // M-gate
-    if ( Vx > -47.14 && Vx < -47.12) // if V = -47.13, divide by 0 error
-      am = 3.199985789461998;
-    else
-      am = 0.32 * (Vx + 47.13) / (1 - exp(-0.1 * (Vx + 47.13)));
-    bm = 0.08 * exp(-Vx / 11.0);
-    lkup[z][5] = am / (am + bm); // minf
-    lkup[z][6] = 1 / (am + bm); // taum
-
-    // D-gate
-    dinf_0 = 1 / (1 + exp(-(Vx + 10) / 6.24));
-    dinf_1 = 1 / (1 + exp(-(Vx + 60) / 0.024));
-    lkup[z][7] = dinf_0 * dinf_1; // dinf
-    if ( Vx > -10.01 && Vx < -9.99)// if V = -10, divide by 0 error
-      lkup[z][8] = 2.289374849326888; // taud
-    else
-      lkup[z][8] =  1 / (1 + exp(-(Vx + 10) / 6.24)) *
-          (1 - exp(-(Vx + 10) / 6.24))/(0.035 * (Vx + 10)); // taud
-
-    // F-gate
-    lkup[z][9] = 1 / (1 + exp((Vx + 32) / 8.0)) +
-        (0.6) / (1 + exp((50 - Vx) / 20.0)); // finf
-    lkup[z][10] = 1 /
-        (0.0197 * exp(-(0.0337 * (Vx + 10)) *
-                      (0.0337 * (Vx + 10))) + 0.02); // tauf
-
-    // B-gate
-    lkup[z][11] = 1 / (1 + exp(-(Vx + 14.0) / 10.8)); // binf
-    lkup[z][12] = (3.7 + 6.1 / (1 + exp((Vx + 25.0) / 4.5))); // taub
-
-    // G-gate
-    lambda_g = 1 - 1 / (1 + exp(-Vx / 0.0024));
-    lkup[z][13] = 1 / (1 + exp((Vx + 60.0) / 5.6)); // ginf
-    lkup[z][14] = (lambda_g * (-0.875 * Vx+12.0) + 12.0 *
-                   (1 - lambda_g)); // taug
-
-    // IKr
-    if ( Vx > -30.01 && Vx < -29.99 ) // if V = -30, divide by 0 error
-      tau_xs1 = 417.9441667499822;
-    else
-      tau_xs1 = 10000 / (0.719 * (Vx + 30) / (1 - exp(-0.148 * (Vx + 30))) +
-                         1.31 * (Vx + 30) / (exp(0.0687 * (Vx + 30)) - 1));
-    lkup[z][15] = 1 / (1 + exp(-(Vx + 21.5) / 7.5)); // xKrinf
-    if ( Vx > -14.21 && Vx < -14.19 ) // if V = -14.2, divide by 0 error
-      lkup[z][16] = 85.830287334611480; // tauxKr
-    lkup[z][16] = (1 / (0.00138 * (Vx + 14.2) /
-                        (1 - exp(-0.123 * (Vx + 14.2))) + 0.00061 *
-                        (Vx + 38.9) / (exp(0.145 *(Vx + 38.9)) -1))); // tauxKr
-    lkup[z][17] = tau_xs1; // tau_xs1
-    lkup[z][18] = 4 * tau_xs1; // tau_xs2
-    lkup[z][19] = 1 / (1 + exp(-(Vx - 1.5) / 16.7)); // xsinf
-  }
 }
 
 LivRudy2009::~LivRudy2009(void){
-  delete[] lkup;
 }
 
 
@@ -234,10 +151,49 @@ void LivRudy2009::solve(){
   ECa = 0.5 * RTF * log(Cao / Cai);
 
   // Na currents
+  // H-gate
+  lambda_na = 1 - 1 / (1 + exp(-(V + 40) / 0.024));
+  ah = lambda_na * 0.135 * exp(-(80 + V) / 6.8);
+  bh = (1 - lambda_na) / (0.13 * (1 + exp((V + 10.66)/(-11.1)))) +
+      lambda_na * (3.56 * exp(0.079 * V) + 3.1 * 1e5 * exp(0.35 * V));
+  hinf = ah / (ah + bh); // hinf
+  hinf= 1 / (ah + bh); // tauh
+  // J-gate
+  aj =  lambda_na *
+      (-1.2714e5 * exp(0.2444 * V) - 3.474e-5 * exp(-0.04391 * V)) *
+      (V + 37.78) / (1 + exp(0.311 * (V + 79.23)));
+  bj = (1 - lambda_na) *
+      (0.3 * exp(-2.535e-7 * V) / (1 + exp(-0.1 * (V + 32)))) + lambda_na *
+      (0.1212 * exp(-0.01052 * V) / (1 + exp(-0.1378 * (V + 40.14))));
+  tauj = 1 / (aj + bj); // tauj
+  jinf = aj / (aj + bj); // jinf
+  // M-gate
+  if (V > -47.14 && V < -47.12) // if V = -47.13, divide by 0 error
+    am = 3.199985789461998;
+  else
+    am = 0.32 * (V + 47.13) / (1 - exp(-0.1 * (V + 47.13)));
+  bm = 0.08 * exp(-V / 11.0);
+  minf = am / (am + bm); // minf
+  taum = 1 / (am + bm); // taum
   INa = GNa_ * m * m * m * h * j * (V - ENa);
   INab = GNab * (V - ENa);
 
   // L-type Ca current
+  // D-gate
+  dinf_0 = 1 / (1 + exp(-(V + 10) / 6.24));
+  dinf_1 = 1 / (1 + exp(-(V + 60) / 0.024));
+  dinf = dinf_0 * dinf_1; // dinf
+  if (V > -10.01 && V < -9.99)// if V = -10, divide by 0 error
+    taud = 2.289374849326888; // taud
+  else
+    taud =  1 / (1 + exp(-(V + 10) / 6.24)) *
+        (1 - exp(-(V + 10) / 6.24))/(0.035 * (V + 10)); // taud
+  // F-gate
+  finf = 1 / (1 + exp((V + 32) / 8.0)) +
+      (0.6) / (1 + exp((50 - V) / 20.0)); // finf
+  tauf = 1 /
+      (0.0197 * exp(-(0.0337 * (V + 10)) *
+                    (0.0337 * (V + 10))) + 0.02); // tauf
   ICa_ = PCa * 4 * F * FRT * V * (gamma_Cai * Cai * fastEXP(2 * V *FRT) -
                                   gamma_Cao *Cao) / (fastEXP(2 * V *FRT) - 1);
   ICaK_ = PCa_K * F * FRT * V * (gamma_Ki *Ki * fastEXP(V * FRT) -
@@ -256,6 +212,15 @@ void LivRudy2009::solve(){
   IpCa = IpCa_ * Cai / (Cai + KmpCa);
 
   // T-type Ca current
+  // B-gate
+  binf = 1 / (1 + exp(-(V + 14.0) / 10.8)); // binf
+  taub = (3.7 + 6.1 / (1 + exp((V + 25.0) / 4.5))); // taub
+
+  // G-gate
+  lambda_g = 1 - 1 / (1 + exp(-V / 0.0024));
+  ginf = 1 / (1 + exp((V + 60.0) / 5.6)); // ginf
+  taug = (lambda_g * (-0.875 * V+12.0) + 12.0 *
+                 (1 - lambda_g)); // taug
   ICaT = GCaT_ * b*b * g * (V - ECa);
 
   // K currents
@@ -265,6 +230,20 @@ void LivRudy2009::solve(){
   IK1 = GK1_ * sqrt(Ko / 5.4) * (V - EK) / (1 + xK1);
 
   // Fast component of the delayed rectifier K current
+  // IKr
+  xKrinf = 1 / (1 + exp(-(V + 21.5) / 7.5)); // xKrinf
+  if (V > -14.21 && V < -14.19) // if V = -14.2, divide by 0 error
+    tauxKr = 85.830287334611480; // tauxKr
+  tauxKr = (1 / (0.00138 * (V + 14.2) /
+                      (1 - exp(-0.123 * (V + 14.2))) + 0.00061 *
+                      (V + 38.9) / (exp(0.145 *(V + 38.9)) -1))); // tauxKr
+  if (V > -30.01 && V < -29.99) // if V = -30, divide by 0 error
+    tauxs1 = 417.9441667499822;
+  else
+    tauxs1 = 10000 / (0.719 * (V + 30) / (1 - exp(-0.148 * (V + 30))) +
+                       1.31 * (V + 30) / (exp(0.0687 * (V + 30)) - 1));
+  tauxs2 = 4 * tauxs1; // tauxs2
+  xsinf = 1 / (1 + exp(-(V - 1.5) / 16.7)); // xsinf
   RKr = 1 / (fastEXP((V + 9) / 22.4) + 1);
   IKr = GKr_ * sqrt(Ko / 5.4) * xKr * RKr * (V - EK);
 
@@ -340,29 +319,6 @@ void LivRudy2009::solve(){
   CaNSR += DT * dCaNSR;
   Jrel += DT * dJreldt;
 
-  // Set gating variables using lookup table
-  ilow = fabs((V - V_min) / 0.1);
-  linext = -(-V + lkup[ilow + 1][0]) / 0.1;
-  hinf = (lkup[ilow + 1][1] - lkup[ilow][1]) * linext + lkup[ilow + 1][1];
-  tauh = (lkup[ilow + 1][2] - lkup[ilow][2]) * linext + lkup[ilow + 1][2];
-  tauj = (lkup[ilow + 1][3] - lkup[ilow][3]) * linext + lkup[ilow + 1][3];
-  jinf = (lkup[ilow + 1][4] - lkup[ilow][4]) * linext + lkup[ilow + 1][4];
-  minf = (lkup[ilow + 1][5] - lkup[ilow][5]) * linext + lkup[ilow + 1][5];
-  taum = (lkup[ilow + 1][6] - lkup[ilow][6]) * linext + lkup[ilow + 1][6];
-  dinf = (lkup[ilow + 1][7] - lkup[ilow][7]) * linext + lkup[ilow + 1][7];
-  taud = (lkup[ilow + 1][8] - lkup[ilow][8]) * linext + lkup[ilow + 1][8];
-  finf = (lkup[ilow + 1][9] - lkup[ilow][9]) * linext + lkup[ilow + 1][9];
-  tauf = (lkup[ilow + 1][10] - lkup[ilow][10]) * linext + lkup[ilow + 1][10];
-  binf = (lkup[ilow + 1][11] - lkup[ilow][11]) * linext + lkup[ilow + 1][11];
-  taub = (lkup[ilow + 1][12] - lkup[ilow][12]) * linext + lkup[ilow + 1][12];
-  ginf = (lkup[ilow + 1][13] - lkup[ilow][13]) * linext + lkup[ilow + 1][13];
-  taug = (lkup[ilow + 1][14] - lkup[ilow][14]) * linext + lkup[ilow + 1][14];
-  xKrinf = (lkup[ilow + 1][15] - lkup[ilow][15]) * linext + lkup[ilow + 1][15];
-  tauxKr = (lkup[ilow + 1][16] - lkup[ilow][16]) * linext + lkup[ilow + 1][16];
-  tauxs1 = (lkup[ilow + 1][17] - lkup[ilow][17]) * linext + lkup[ilow + 1][17];
-  tauxs2 = (lkup[ilow + 1][18] - lkup[ilow][18]) * linext + lkup[ilow + 1][18];
-  xsinf = (lkup[ilow + 1][19] - lkup[ilow][19]) * linext + lkup[ilow + 1][19];
-
   // Update gating variables - Euler Method
   h = (hinf - (hinf - h) *
        fastEXP(-DT / tauh)); // Rush-Larsen approximation used for m gate
@@ -370,13 +326,20 @@ void LivRudy2009::solve(){
        fastEXP(-DT / tauj)); // Rush-Larsen approximation used for m gate
   m = (minf - (minf - m) *
        fastEXP(-DT / taum)); // Rush-Larsen approximation used for m gate
-  d += DT * ((dinf - d)/taud);
-  f += DT * ((finf - f)/tauf);
-  b += DT * ((binf - b) / taub);
-  g += DT * ((ginf - g) / taug);
-  xKr += DT * ((xKrinf - xKr)/tauxKr);
-  xs1 += DT * ((xsinf - xs1) / tauxs1);
-  xs2 += DT * ((xsinf - xs2) / tauxs2);
+  d = (dinf - (dinf - d) *
+       fastEXP(-DT / taud));
+  f = (finf - (finf - f) *
+       fastEXP(-DT / tauf));
+  b = (binf - (binf - b) *
+       fastEXP(-DT / taub));
+  g = (ginf - (ginf - g) *
+       fastEXP(-DT / taug));
+  xKr = (xKrinf - (xKrinf - xKr) *
+       fastEXP(-DT / tauxKr));
+  xs1 = (xsinf - (xsinf - xs1) *
+       fastEXP(-DT / tauxs1));
+  xs2 = (xsinf - (xsinf - xs2) *
+       fastEXP(-DT / tauxs2));
 }
 
 // Voltage Clamp Function
