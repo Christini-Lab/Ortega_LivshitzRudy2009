@@ -56,7 +56,7 @@ int main() {
   double dVdt; // dVdt used to modify timestep
   double dVdtThresh = maxDt * 2; // If Vm changes less than this, set dt to max
   double v0 = model.getVm(); // Previous timestep voltage
-  int steps = dt / dataDt;
+  int steps = dataDt / dt;
   int bcl = 500; // ms
   int beats = 500;
   int stimAmp = 40; // pA/pF
