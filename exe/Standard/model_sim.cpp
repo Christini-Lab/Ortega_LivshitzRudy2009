@@ -140,7 +140,7 @@ int main() {
     std::cout << *it << std::endl;
   }
 
-  Data output
+  // Data output
   std::ofstream dataFile("data.dat");
   dataFile << "Time,Voltage,Nai,Ki,Cai" << std::endl;
   dataFile << std::setprecision(8);
@@ -153,7 +153,6 @@ int main() {
   dataFile.close();
 
   // APD data output, seperate output since it is by beat
-  std::ofstream dataFile;
   std::vector<double> apdData(apdCalc.get_all_apd());
   dataFile.open("apd.dat");
   dataFile << std::setprecision(6);
