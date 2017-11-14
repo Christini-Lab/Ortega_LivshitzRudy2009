@@ -36,8 +36,7 @@
 
 #include "../include/LivRudy2009.hpp"
 
-#define fastEXP RTMath.fastEXP //define shortcut for fastEXP function
-//#define fastEXP exp
+// Either cmath exp or fast exponent funciton used
 
 LivRudy2009::LivRudy2009(void) { // Model initialization
 
@@ -71,15 +70,13 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   Cm = 1.0;
   // Fixed ionic concentrations
   // Original concentrations
-  /*
-  Ko = 4.5 ; // uM
-  Nao = 140 ; // uM
-  Cao = 1.8 ; // uM
-  */
+  // Ko = 4.5 ; // mM
+  // Nao = 140 ; // mM
+  // Cao = 1.8 ; // mM
   // Concentration used in dynamic clamp experiments
-  Ko = 5.4 ; // uM
-  Nao = 137; // uM
-  Cao = 2.0 ; // uM
+  Ko = 5.4 ; // mM
+  Nao = 137; // mM
+  Cao = 2.0 ; // mM
   // Na current constants
   GNa_= 16; // mS/cm^2
   GNab = 0.004;
@@ -194,12 +191,12 @@ void LivRudy2009::solve(){
   tauf = 1 /
       (0.0197 * exp(-(0.0337 * (V + 10)) *
                     (0.0337 * (V + 10))) + 0.02); // tauf
-  ICa_ = PCa * 4 * F * FRT * V * (gamma_Cai * Cai * fastEXP(2 * V *FRT) -
-                                  gamma_Cao *Cao) / (fastEXP(2 * V *FRT) - 1);
-  ICaK_ = PCa_K * F * FRT * V * (gamma_Ki *Ki * fastEXP(V * FRT) -
-                                 gamma_Ko * Ko) / (fastEXP(V * FRT) - 1);
-  ICaNa_ = PCa_Na * F * FRT * V * (gamma_Nai * Nai * fastEXP(V * FRT) -
-                                   gamma_Nao * Nao) / (fastEXP(V * FRT) - 1) ;
+  ICa_ = PCa * 4 * F * FRT * V * (gamma_Cai * Cai * exp(2 * V *FRT) -
+                                  gamma_Cao *Cao) / (exp(2 * V *FRT) - 1);
+  ICaK_ = PCa_K * F * FRT * V * (gamma_Ki *Ki * exp(V * FRT) -
+                                 gamma_Ko * Ko) / (exp(V * FRT) - 1);
+  ICaNa_ = PCa_Na * F * FRT * V * (gamma_Nai * Nai * exp(V * FRT) -
+                                   gamma_Nao * Nao) / (exp(V * FRT) - 1) ;
   fCa = 1 / (Cai / KmCa + 1);
   ICaL = GCaL_ * ICa_ * d * f * fCa;
   ICaL_K = GCaL_ * ICaK_* d * f * fCa;
@@ -225,8 +222,8 @@ void LivRudy2009::solve(){
 
   // K currents
   // Time independent K current
-  xK1 = 0.004 * (1 + fastEXP(0.6987 * (V - EK + 11.724))) /
-      (1 + fastEXP(0.6168 * (V - EK + 4.872)));
+  xK1 = 0.004 * (1 + exp(0.6987 * (V - EK + 11.724))) /
+      (1 + exp(0.6168 * (V - EK + 4.872)));
   IK1 = GK1_ * sqrt(Ko / 5.4) * (V - EK) / (1 + xK1);
 
   // Fast component of the delayed rectifier K current
@@ -244,23 +241,23 @@ void LivRudy2009::solve(){
                        1.31 * (V + 30) / (exp(0.0687 * (V + 30)) - 1));
   tauxs2 = 4 * tauxs1; // tauxs2
   xsinf = 1 / (1 + exp(-(V - 1.5) / 16.7)); // xsinf
-  RKr = 1 / (fastEXP((V + 9) / 22.4) + 1);
+  RKr = 1 / (exp((V + 9) / 22.4) + 1);
   IKr = GKr_ * sqrt(Ko / 5.4) * xKr * RKr * (V - EK);
 
   // Fast component of the delayed rectifier K current
   //IKs = GKs_ * (1 + 0.6/(pow(3.8e-5/Cai,1.4)+1)) * xs1 * xs2 * (V - EKs);
-  IKs = GKs_ * (1 + 0.6 / (fastEXP(1.4 * log(3.8e-5 / Cai)) + 1)) * xs1 *
+  IKs = GKs_ * (1 + 0.6 / (exp(1.4 * log(3.8e-5 / Cai)) + 1)) * xs1 *
       xs2 * (V - EKs); // pow() removed
 
   // Plateau K current
-  Kp = 1 / (1 + fastEXP((7.488 - V) / 5.98));
+  Kp = 1 / (1 + exp((7.488 - V) / 5.98));
   IKp = GKp_ * Kp * (V - EK);
 
   // Pumps and transporters
   // Na-K pump
-  sigma_NaK = (fastEXP(Nao / 67.3) - 1) / 7.0;
-  fNaK = 1/(1 + 0.1245 * fastEXP(-0.1 * V * FRT) + 0.0365 * sigma_NaK *
-            fastEXP(-V * FRT));
+  sigma_NaK = (exp(Nao / 67.3) - 1) / 7.0;
+  fNaK = 1/(1 + 0.1245 * exp(-0.1 * V * FRT) + 0.0365 * sigma_NaK *
+            exp(-V * FRT));
   //INaK = INaK_ * fNaK * Ko / ( (Ko + KmK_NaK) * pow( 1 +
   //((KmNa_NaK/Nai)*(KmNa_NaK/Nai)),2) );
   INaK = INaK_ * fNaK * Ko / ((Ko + KmK_NaK) *
@@ -268,10 +265,10 @@ void LivRudy2009::solve(){
                                     (KmNa_NaK / Nai)))); // pow() removed
 
   // Na-Ca exchanger
-  INCX = GNCX_ * kNCX * fastEXP((eta - 1) * V * FRT) *
-      ((Nai * Nai * Nai) * Cao * fastEXP(V * FRT) - (Nao * Nao * Nao) * Cai) /
-      ( 1 +ksat * fastEXP((eta - 1) * V * FRT) *
-        ((Nai * Nai * Nai) * Cao * fastEXP(V * FRT) +
+  INCX = GNCX_ * kNCX * exp((eta - 1) * V * FRT) *
+      ((Nai * Nai * Nai) * Cao * exp(V * FRT) - (Nao * Nao * Nao) * Cai) /
+      ( 1 +ksat * exp((eta - 1) * V * FRT) *
+        ((Nai * Nai * Nai) * Cao * exp(V * FRT) +
          (Nao * Nao * Nao) * Cai));
 
   // Intracellular Ca fluxes
@@ -279,7 +276,7 @@ void LivRudy2009::solve(){
   //Jrelinf = alpha_rel * beta_tau * ICaL / (pow((Krel_inf/CaJSR),hrel) + 1);
   // Added GJrel_ as a scaling factor
   Jrelinf = GJrel_ * alpha_rel * beta_tau * ICaL /
-      (fastEXP(hrel * log(Krel_inf / CaJSR)) + 1);
+      (exp(hrel * log(Krel_inf / CaJSR)) + 1);
   tau_rel = beta_tau / (Krel_tau / CaJSR + 1);
   dJreldt = - (Jrelinf + Jrel) / tau_rel;
 
@@ -320,26 +317,16 @@ void LivRudy2009::solve(){
   Jrel += DT * dJreldt;
 
   // Update gating variables - Euler Method
-  h = (hinf - (hinf - h) *
-       fastEXP(-DT / tauh)); // Rush-Larsen approximation used for m gate
-  j = (jinf - (jinf - j) *
-       fastEXP(-DT / tauj)); // Rush-Larsen approximation used for m gate
-  m = (minf - (minf - m) *
-       fastEXP(-DT / taum)); // Rush-Larsen approximation used for m gate
-  d = (dinf - (dinf - d) *
-       fastEXP(-DT / taud));
-  f = (finf - (finf - f) *
-       fastEXP(-DT / tauf));
-  b = (binf - (binf - b) *
-       fastEXP(-DT / taub));
-  g = (ginf - (ginf - g) *
-       fastEXP(-DT / taug));
-  xKr = (xKrinf - (xKrinf - xKr) *
-       fastEXP(-DT / tauxKr));
-  xs1 = (xsinf - (xsinf - xs1) *
-       fastEXP(-DT / tauxs1));
-  xs2 = (xsinf - (xsinf - xs2) *
-       fastEXP(-DT / tauxs2));
+  h = (hinf - (hinf - h) * exp(-DT / tauh));
+  j = (jinf - (jinf - j) * exp(-DT / tauj));
+  m = (minf - (minf - m) * exp(-DT / taum));
+  d = (dinf - (dinf - d) * exp(-DT / taud));
+  f = (finf - (finf - f) * exp(-DT / tauf));
+  b = (binf - (binf - b) * exp(-DT / taub));
+  g = (ginf - (ginf - g) * exp(-DT / taug));
+  xKr = (xKrinf - (xKrinf - xKr) * exp(-DT / tauxKr));
+  xs1 = (xsinf - (xsinf - xs1) * exp(-DT / tauxs1));
+  xs2 = (xsinf - (xsinf - xs2) * exp(-DT / tauxs2));
 }
 
 // Voltage Clamp Function
@@ -398,66 +385,63 @@ const int LivRudy2009::getStatus() {
 // Model Reset Function
 void LivRudy2009::reset(){ // Reset to initial conditions
   // Initial conditions at 0 beats
-  /*
-  V = -84.7;
-  Cai = 0.0822e-3;
-  CaNSR = 1.25;
-  CaJSR = 1.25;
-  Nai = 9.71;
-  Ki = 142.82;
-  m = 2.46e-4;
-  h = 0.99869;
-  j = 0.99887;
-  d = 1e-4;
-  f = 0.983;
-  b = 1e-4;
-  g = 0.983;
-  xKr = 0.229;
-  xs1 = 1e-4;
-  xs2 = 1e-4;
-  Jrel = 1e-4;
-  */
+  // V = -84.7;
+  // Cai = 0.0822e-3;
+  // CaNSR = 1.25;
+  // CaJSR = 1.25;
+  // Nai = 9.71;
+  // Ki = 142.82;
+  // m = 2.46e-4;
+  // h = 0.99869;
+  // j = 0.99887;
+  // d = 1e-4;
+  // f = 0.983;
+  // b = 1e-4;
+  // g = 0.983;
+  // xKr = 0.229;
+  // xs1 = 1e-4;
+  // xs2 = 1e-4;
+  // Jrel = 1e-4;
 
-  // Initial conditions after 700 beats (Steady State)
-  /*
-  V = -88.9248;
-  Cai = 1.1366e-04;
-  CaNSR = 1.7519;
-  CaJSR = 1.6213;
-  Nai = 14.1538;
-  Ki = 136.5910;
-  m = 8.0083e-04;
-  h = 0.9931;
-  j = 0.9957;
-  d = 9.8446e-26;
-  f = 0.9998;
-  b = 9.6988e-04;
-  g = 0.9942;
-  xKr = 1.2471e-04;
-  xs1 = 0.0049;
-  xs2 = 0.0243;
-  Jrel = 2.4967e-18;
-  */
+  // Initial conditions
+  // 1800 beats at 2Hz pacing
+  // V = -88.9324;
+  // Cai = 0.00018233;
+  // CaNSR = 2.56419;
+  // CaJSR = 1.86826;
+  // Nai = 16.085;
+  // Ki = 136.156;
+  // m = 0.000799816;
+  // h = 1.97906;
+  // j = 0.995711;
+  // d = 9.88131e-324;
+  // f = 0.999401;
+  // b = 0.000970279;
+  // g = 0.979855;
+  // xKr = 0.000136487;
+  // xs1 = 0.0173837;
+  // xs2 = 0.0635809;
+  // Jrel = 6.84942e-40;
 
-  // Initial conditions after conc change - 800 beats
-  // Used in dynamic clamp experiments
-  V = -8.185872e+01;
-  Cai = 1.797384e-04;
-  CaNSR = 2.463960e+00;
-  CaJSR = 1.524945e+00;
-  Nai = 1.357382e+01;
-  Ki = 1.239044e+02;
-  m = 2.601169e-03;
-  h = 9.697101e-01;
-  j = 9.806867e-01;
-  d = 5.928788e-322;
-  f = 9.981991e-01;
-  b = 1.866354e-03;
-  g = 9.650771e-01;
-  xKr = 4.291283e-04;
-  xs1 = 2.954278e-02;
-  xs2 = 8.283927e-02;
-  Jrel = 1.101473e-38;
+  // Initial conditions after conc change used in dynamic clamp experiments
+  // 1800 beats at 2Hz pacing
+  V = -84.7407;
+  Cai = 0.000188743;
+  CaNSR = 2.64642;
+  CaJSR = 1.9578;
+  Nai = 14.2117;
+  Ki = 137.978;
+  m = 0.00161367;
+  h = 3.62995;
+  j = 0.989905;
+  d = 9.88131e-324;
+  f = 0.998934;
+  b = 0.00142951;
+  g = 0.9752;
+  xKr = 0.000249849;
+  xs1 = 0.0227826;
+  xs2 = 0.0749262;
+  Jrel = 4.37644e-39;
 }
 
 // Condition functions
