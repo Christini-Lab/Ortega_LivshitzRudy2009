@@ -55,7 +55,7 @@ int main() {
   model.setDt(dt);
   int steps = std::round(dataDt / dt);
   int bcl = 500; // ms
-  int beats = 3;
+  int beats = 50;
   int beatIdx = 0;
   int stimAmp = 40; // pA/pF
   int stimLength = 1; // ms
