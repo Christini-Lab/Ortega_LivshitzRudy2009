@@ -192,14 +192,6 @@ class LivRudy2009 {
   // Loop variable
   int i;
 
-  // Lookup Table variables
-  double V_min;
-  double Vx;
-  int z;
-  int ilow;
-  double linext;
-  double (*lkup)[20];
-
   // Model parameters
   double V;
   double I_Inject;
