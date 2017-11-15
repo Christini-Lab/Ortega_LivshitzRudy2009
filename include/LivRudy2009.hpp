@@ -359,7 +359,8 @@ class LivRudy2009 {
   double KmCSQN;
 
   double alp0, alp1, alp2;
-  std::complex<double> q, r, t;
+  double q, r;
+  std::complex<double> qr, root_qr, cuberoot_rqr, t;
   double Cai_t, CaJSR_t;
 };
 

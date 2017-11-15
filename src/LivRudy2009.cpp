@@ -141,6 +141,10 @@ LivRudy2009::~LivRudy2009(void){
 
 // Model Solver
 void LivRudy2009::solve(){
+  // Buffering
+  Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
+  CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
+
   // Reversel Potentials
   ENa = RTF * log(Nao / Nai);
   EK = RTF * log(Ko / Ki);
@@ -295,14 +299,9 @@ void LivRudy2009::solve(){
       (Vmyo * F);
   dCai = (-Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
                (ICaL + ICaT + ICab + IpCa - 2 * INCX) *
-               Acap / (2 * Vmyo * F));
-  Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
-  CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
-  dCaJSR = Jtr - Jrel;
+               Acap / (2 * Vmyo * F));  dCaJSR = Jtr - Jrel;
   dCaNSR = Jserca - Jtr * VJSR / VNSR;
-  std::cout << calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN) << " "
-            << calcium_buffer(1e-3, TRPNtot, KmTRPN, CMDNtot, KmCMDN) << " "
-            << calcium_buffer(1e-5, TRPNtot, KmTRPN, CMDNtot, KmCMDN) << std::endl;
+
   // Derivative for voltage
   dVdt = -(Iion);
 
@@ -335,30 +334,12 @@ double LivRudy2009::calcium_buffer(
   alp0 = -b1 * b2 * ca_t;
   q = (3 * alp1 - (alp2 * alp2)) / 9;
   r = (9 * alp2 * alp1 - 27 * alp0 - 2 * (alp2 * alp2 * alp2)) / 54;
-  t = pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3) -
-      q /  pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3);
+  qr = pow(q,3) + pow(r,2);
+  root_qr = pow(qr, 0.5);
+  cuberoot_rqr = pow(r + root_qr, 1.0/3.0);
+  t = cuberoot_rqr - q / cuberoot_rqr;
 
-  complex<double> t_d = pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3) -
-      q /  pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3);
-
-  std::complex<double> z2(-1.0, 0);  // square root of -1
-    std::cout << "-1^0.5 = " << pow(z2, 0.5) << '\n';
-  std::cout
-      << a1 << " "
-      << a2 << " "
-      << b1 << " "
-      << b2 << " "
-      << ca_t << " "
-       << alp0 << " "
-       << alp1 << " "
-       << alp2 << " "
-       << q << " "
-       << r << " "
-      << t << " "
-      << t_d << " "
-      << std::endl;
-   return abs(t - alp2/3);
-
+  return abs(t - alp2/3);
 }
 
 // Voltage Clamp Function
@@ -474,6 +455,9 @@ void LivRudy2009::reset(){ // Reset to initial conditions
   xs1 = 0.0227826;
   xs2 = 0.0749262;
   Jrel = 4.37644e-39;
+
+  Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
+  CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
 }
 
 // Condition functions
