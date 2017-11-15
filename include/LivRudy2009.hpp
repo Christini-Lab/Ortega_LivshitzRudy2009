@@ -49,6 +49,7 @@
 #define LIVRUDY2009_H
 
 #include <vector>
+#include <complex>
 
 #include "RealTimeMath.hpp"
 
@@ -57,7 +58,7 @@ class LivRudy2009 {
  public:
   LivRudy2009(void);
   ~LivRudy2009(void);
-
+  double calcium_buffer(double, double, double, double, double);
   /*
     Current clamp model
     Returns 1 if model passed crash tests, 0 if it crashed
@@ -265,9 +266,6 @@ class LivRudy2009 {
   double Jrelinf, tau_rel, Jserca, Jtr;
   double Jserca_; // Jserca scaling factor, nominal = 1.0
 
-  // Buffering
-  double BJSR, Bi;
-
   // Derivatives
   double dNai, dKi, dCai, dCaJSR, dCaNSR, dJreldt;
 
@@ -360,6 +358,11 @@ class LivRudy2009 {
   // Buffers in JSR
   double CSQNtot;
   double KmCSQN;
+
+  double alp0, alp1, alp2;
+  double q, r;
+  std::complex<double> qr, root_qr, cuberoot_rqr, t;
+  double Cai_t, CaJSR_t;
 };
 
 #endif

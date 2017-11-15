@@ -36,8 +36,6 @@
 
 #include "../include/LivRudy2009.hpp"
 
-// Either cmath exp or fast exponent funciton used
-
 LivRudy2009::LivRudy2009(void) { // Model initialization
 
   // Model parameters
@@ -141,6 +139,10 @@ LivRudy2009::~LivRudy2009(void){
 
 // Model Solver
 void LivRudy2009::solve(){
+  // Buffering
+  Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
+  CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
+
   // Reversel Potentials
   ENa = RTF * log(Nao / Nai);
   EK = RTF * log(Ko / Ki);
@@ -149,9 +151,9 @@ void LivRudy2009::solve(){
 
   // Na currents
   // H-gate
-  lambda_na = 1 - 1 / (1 + exp(-(V + 40) / 0.024));
-  ah = lambda_na * 0.135 * exp(-(80 + V) / 6.8);
-  bh = (1 - lambda_na) / (0.13 * (1 + exp((V + 10.66)/(-11.1)))) +
+  lambda_na = 1.0 - 1.0 / (1.0 + exp(-(V + 40) / 0.024));
+  ah = lambda_na * 0.135 * exp(-(80.0 + V) / 6.8);
+  bh = (1.0 - lambda_na) / (0.13 * (1.0 + exp((V + 10.66)/(-11.1)))) +
       lambda_na * (3.56 * exp(0.079 * V) + 3.1 * 1e5 * exp(0.35 * V));
   hinf = ah / (ah + bh); // hinf
   hinf= 1 / (ah + bh); // tauh
@@ -162,42 +164,42 @@ void LivRudy2009::solve(){
   bj = (1 - lambda_na) *
       (0.3 * exp(-2.535e-7 * V) / (1 + exp(-0.1 * (V + 32)))) + lambda_na *
       (0.1212 * exp(-0.01052 * V) / (1 + exp(-0.1378 * (V + 40.14))));
-  tauj = 1 / (aj + bj); // tauj
+  tauj = 1.0 / (aj + bj); // tauj
   jinf = aj / (aj + bj); // jinf
   // M-gate
   if (V > -47.14 && V < -47.12) // if V = -47.13, divide by 0 error
     am = 3.199985789461998;
   else
-    am = 0.32 * (V + 47.13) / (1 - exp(-0.1 * (V + 47.13)));
+    am = 0.32 * (V + 47.13) / (1.0 - exp(-0.1 * (V + 47.13)));
   bm = 0.08 * exp(-V / 11.0);
   minf = am / (am + bm); // minf
-  taum = 1 / (am + bm); // taum
+  taum = 1.0 / (am + bm); // taum
   INa = GNa_ * m * m * m * h * j * (V - ENa);
   INab = GNab * (V - ENa);
 
   // L-type Ca current
   // D-gate
-  dinf_0 = 1 / (1 + exp(-(V + 10) / 6.24));
-  dinf_1 = 1 / (1 + exp(-(V + 60) / 0.024));
+  dinf_0 = 1.0 / (1.0 + exp(-(V + 10) / 6.24));
+  dinf_1 = 1.0 / (1.0 + exp(-(V + 60) / 0.024));
   dinf = dinf_0 * dinf_1; // dinf
   if (V > -10.01 && V < -9.99)// if V = -10, divide by 0 error
     taud = 2.289374849326888; // taud
   else
-    taud =  1 / (1 + exp(-(V + 10) / 6.24)) *
+    taud =  1.0 / (1.0 + exp(-(V + 10) / 6.24)) *
         (1 - exp(-(V + 10) / 6.24))/(0.035 * (V + 10)); // taud
   // F-gate
-  finf = 1 / (1 + exp((V + 32) / 8.0)) +
-      (0.6) / (1 + exp((50 - V) / 20.0)); // finf
-  tauf = 1 /
+  finf = 1.0 / (1.0 + exp((V + 32) / 8.0)) +
+      (0.6) / (1.0 + exp((50 - V) / 20.0)); // finf
+  tauf = 1.0 /
       (0.0197 * exp(-(0.0337 * (V + 10)) *
                     (0.0337 * (V + 10))) + 0.02); // tauf
-  ICa_ = PCa * 4 * F * FRT * V * (gamma_Cai * Cai * exp(2 * V *FRT) -
-                                  gamma_Cao *Cao) / (exp(2 * V *FRT) - 1);
+  ICa_ = PCa * 4.0 * F * FRT * V * (gamma_Cai * Cai * exp(2.0 * V *FRT) -
+                                  gamma_Cao *Cao) / (exp(2.0 * V *FRT) - 1.0);
   ICaK_ = PCa_K * F * FRT * V * (gamma_Ki *Ki * exp(V * FRT) -
-                                 gamma_Ko * Ko) / (exp(V * FRT) - 1);
+                                 gamma_Ko * Ko) / (exp(V * FRT) - 1.0);
   ICaNa_ = PCa_Na * F * FRT * V * (gamma_Nai * Nai * exp(V * FRT) -
-                                   gamma_Nao * Nao) / (exp(V * FRT) - 1) ;
-  fCa = 1 / (Cai / KmCa + 1);
+                                   gamma_Nao * Nao) / (exp(V * FRT) - 1.0) ;
+  fCa = 1.0 / (Cai / KmCa + 1.0);
   ICaL = GCaL_ * ICa_ * d * f * fCa;
   ICaL_K = GCaL_ * ICaK_* d * f * fCa;
   ICaL_Na = GCaL_ * ICaNa_ * d * f * fCa;
@@ -210,64 +212,64 @@ void LivRudy2009::solve(){
 
   // T-type Ca current
   // B-gate
-  binf = 1 / (1 + exp(-(V + 14.0) / 10.8)); // binf
+  binf = 1.0 / (1.0 + exp(-(V + 14.0) / 10.8)); // binf
   taub = (3.7 + 6.1 / (1 + exp((V + 25.0) / 4.5))); // taub
 
   // G-gate
-  lambda_g = 1 - 1 / (1 + exp(-V / 0.0024));
-  ginf = 1 / (1 + exp((V + 60.0) / 5.6)); // ginf
-  taug = (lambda_g * (-0.875 * V+12.0) + 12.0 *
-                 (1 - lambda_g)); // taug
+  lambda_g = 1.0 - 1.0 / (1.0 + exp(-V / 0.0024));
+  ginf = 1.0 / (1.0 + exp((V + 60.0) / 5.6)); // ginf
+  taug = (lambda_g * (-0.875 * V + 12.0) + 12.0 *
+                 (1.0 - lambda_g)); // taug
   ICaT = GCaT_ * b*b * g * (V - ECa);
 
   // K currents
   // Time independent K current
-  xK1 = 0.004 * (1 + exp(0.6987 * (V - EK + 11.724))) /
-      (1 + exp(0.6168 * (V - EK + 4.872)));
-  IK1 = GK1_ * sqrt(Ko / 5.4) * (V - EK) / (1 + xK1);
+  xK1 = 0.004 * (1.0 + exp(0.6987 * (V - EK + 11.724))) /
+      (1.0 + exp(0.6168 * (V - EK + 4.872)));
+  IK1 = GK1_ * sqrt(Ko / 5.4) * (V - EK) / (1.0 + xK1);
 
   // Fast component of the delayed rectifier K current
   // IKr
-  xKrinf = 1 / (1 + exp(-(V + 21.5) / 7.5)); // xKrinf
+  xKrinf = 1.0 / (1.0 + exp(-(V + 21.5) / 7.5)); // xKrinf
   if (V > -14.21 && V < -14.19) // if V = -14.2, divide by 0 error
     tauxKr = 85.830287334611480; // tauxKr
-  tauxKr = (1 / (0.00138 * (V + 14.2) /
-                      (1 - exp(-0.123 * (V + 14.2))) + 0.00061 *
-                      (V + 38.9) / (exp(0.145 *(V + 38.9)) -1))); // tauxKr
+  tauxKr = (1.0 / (0.00138 * (V + 14.2) /
+                      (1.0 - exp(-0.123 * (V + 14.2))) + 0.00061 *
+                      (V + 38.9) / (exp(0.145 *(V + 38.9)) -1.0))); // tauxKr
   if (V > -30.01 && V < -29.99) // if V = -30, divide by 0 error
     tauxs1 = 417.9441667499822;
   else
-    tauxs1 = 10000 / (0.719 * (V + 30) / (1 - exp(-0.148 * (V + 30))) +
-                       1.31 * (V + 30) / (exp(0.0687 * (V + 30)) - 1));
-  tauxs2 = 4 * tauxs1; // tauxs2
-  xsinf = 1 / (1 + exp(-(V - 1.5) / 16.7)); // xsinf
-  RKr = 1 / (exp((V + 9) / 22.4) + 1);
+    tauxs1 = 10000.0 / (0.719 * (V + 30.0) / (1 - exp(-0.148 * (V + 30.0))) +
+                       1.31 * (V + 30.0) / (exp(0.0687 * (V + 30.0)) - 1.0));
+  tauxs2 = 4.0 * tauxs1; // tauxs2
+  xsinf = 1.0 / (1.0 + exp(-(V - 1.5) / 16.7)); // xsinf
+  RKr = 1.0 / (exp((V + 9.0) / 22.4) + 1.0);
   IKr = GKr_ * sqrt(Ko / 5.4) * xKr * RKr * (V - EK);
 
   // Fast component of the delayed rectifier K current
   //IKs = GKs_ * (1 + 0.6/(pow(3.8e-5/Cai,1.4)+1)) * xs1 * xs2 * (V - EKs);
-  IKs = GKs_ * (1 + 0.6 / (exp(1.4 * log(3.8e-5 / Cai)) + 1)) * xs1 *
+  IKs = GKs_ * (1.0 + 0.6 / (exp(1.4 * log(3.8e-5 / Cai)) + 1.0)) * xs1 *
       xs2 * (V - EKs); // pow() removed
 
   // Plateau K current
-  Kp = 1 / (1 + exp((7.488 - V) / 5.98));
+  Kp = 1.0 / (1.0 + exp((7.488 - V) / 5.98));
   IKp = GKp_ * Kp * (V - EK);
 
   // Pumps and transporters
   // Na-K pump
   sigma_NaK = (exp(Nao / 67.3) - 1) / 7.0;
-  fNaK = 1/(1 + 0.1245 * exp(-0.1 * V * FRT) + 0.0365 * sigma_NaK *
+  fNaK = 1.0/(1.0 + 0.1245 * exp(-0.1 * V * FRT) + 0.0365 * sigma_NaK *
             exp(-V * FRT));
   //INaK = INaK_ * fNaK * Ko / ( (Ko + KmK_NaK) * pow( 1 +
   //((KmNa_NaK/Nai)*(KmNa_NaK/Nai)),2) );
   INaK = INaK_ * fNaK * Ko / ((Ko + KmK_NaK) *
-                              (1 + ((KmNa_NaK / Nai) *
+                              (1.0 + ((KmNa_NaK / Nai) *
                                     (KmNa_NaK / Nai)))); // pow() removed
 
   // Na-Ca exchanger
-  INCX = GNCX_ * kNCX * exp((eta - 1) * V * FRT) *
+  INCX = GNCX_ * kNCX * exp((eta - 1.0) * V * FRT) *
       ((Nai * Nai * Nai) * Cao * exp(V * FRT) - (Nao * Nao * Nao) * Cai) /
-      ( 1 +ksat * exp((eta - 1) * V * FRT) *
+      ( 1.0 + ksat * exp((eta - 1.0) * V * FRT) *
         ((Nai * Nai * Nai) * Cao * exp(V * FRT) +
          (Nao * Nao * Nao) * Cai));
 
@@ -283,11 +285,6 @@ void LivRudy2009::solve(){
   Jserca = Jserca_ * Vserca * (Cai / (Cai + Kmserca) - CaNSR / CaNSR_max);
 
   Jtr = (CaNSR - CaJSR) / tau_transfer;
-
-  // Buffering factors for rapid buffering approximation
-  BJSR = 1.0 / (1 + CSQNtot * KmCSQN / ((KmCSQN + CaJSR) * (KmCSQN + CaJSR)));
-  Bi = 1.0 / (1 + (CMDNtot * KmCMDN / ((Cai + KmCMDN) * (Cai + KmCMDN))) +
-              (TRPNtot * KmTRPN / ((Cai + KmTRPN) * (Cai + KmTRPN))));
 
   // Total Current
   NaIon = INa + INab + 3 * INCX + ICaL_Na + 3 * INaK;
@@ -311,8 +308,8 @@ void LivRudy2009::solve(){
   V += DT * dVdt;
   Nai += DT * dNai;
   Ki += DT * dKi;
-  Cai += DT * dCai;
-  CaJSR += DT * dCaJSR;
+  Cai_t += DT * dCai;
+  CaJSR_t += DT * dCaJSR;
   CaNSR += DT * dCaNSR;
   Jrel += DT * dJreldt;
 
@@ -327,6 +324,21 @@ void LivRudy2009::solve(){
   xKr = (xKrinf - (xKrinf - xKr) * exp(-DT / tauxKr));
   xs1 = (xsinf - (xsinf - xs1) * exp(-DT / tauxs1));
   xs2 = (xsinf - (xsinf - xs2) * exp(-DT / tauxs2));
+}
+
+double LivRudy2009::calcium_buffer(
+    double ca_t, double a1, double b1, double a2, double b2) {
+  alp2 = a1 + a2 + b1 + b2 - ca_t;
+  alp1 = b1 * b2 - ca_t * (b1 + b2) + a1 * b2 + a2 * b1;
+  alp0 = -b1 * b2 * ca_t;
+  q = (3.0 * alp1 - (alp2 * alp2)) / 9.0;
+  r = (9.0 * alp2 * alp1 - 27.0 * alp0 - 2.0 * (alp2 * alp2 * alp2)) / 54.0;
+  qr = pow(q,3.0) + pow(r,2.0);
+  root_qr = pow(qr, 0.5);
+  cuberoot_rqr = pow(r + root_qr, 1.0/3.0);
+  t = cuberoot_rqr - q / cuberoot_rqr;
+
+  return abs(t - alp2/3.0);
 }
 
 // Voltage Clamp Function
@@ -425,23 +437,26 @@ void LivRudy2009::reset(){ // Reset to initial conditions
 
   // Initial conditions after conc change used in dynamic clamp experiments
   // 1800 beats at 2Hz pacing
-  V = -84.7407;
-  Cai = 0.000188743;
-  CaNSR = 2.64642;
-  CaJSR = 1.9578;
-  Nai = 14.2117;
-  Ki = 137.978;
-  m = 0.00161367;
-  h = 3.62995;
-  j = 0.989905;
+  V = -84.7216;
+  Cai_t = 0.000189379;
+  CaNSR = 2.64793;
+  CaJSR_t = 1.95206;
+  Nai = 14.2728;
+  Ki = 137.771;
+  m = 0.0016188;
+  h = 3.63989;
+  j = 0.989864;
   d = 9.88131e-324;
-  f = 0.998934;
-  b = 0.00142951;
-  g = 0.9752;
-  xKr = 0.000249849;
-  xs1 = 0.0227826;
-  xs2 = 0.0749262;
-  Jrel = 4.37644e-39;
+  f = 0.998935;
+  b = 0.00143203;
+  g = 0.97522;
+  xKr = 0.000250239;
+  xs1 = 0.0226794;
+  xs2 =0.0745219;
+  Jrel =2.28633e-39;
+
+  Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
+  CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
 }
 
 // Condition functions
