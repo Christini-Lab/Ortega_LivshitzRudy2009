@@ -284,11 +284,6 @@ void LivRudy2009::solve(){
 
   Jtr = (CaNSR - CaJSR) / tau_transfer;
 
-  // Buffering factors for rapid buffering approximation
-  BJSR = 1.0 / (1 + CSQNtot * KmCSQN / ((KmCSQN + CaJSR) * (KmCSQN + CaJSR)));
-  Bi = 1.0 / (1 + (CMDNtot * KmCMDN / ((Cai + KmCMDN) * (Cai + KmCMDN))) +
-              (TRPNtot * KmTRPN / ((Cai + KmTRPN) * (Cai + KmTRPN))));
-
   // Total Current
   Iion = INa + INab + ICaL + ICaL_Na + ICaL_K + ICab + ICaT + IpCa + IKr +
       IKs + IK1 + IKp + INCX + INaK + I_Inject;
@@ -298,22 +293,16 @@ void LivRudy2009::solve(){
   // Injected current assumed to be due to potassium flux
   dKi = -(I_Inject + IKr + IKs + IK1 + IKp + ICaL_K - 2 * INaK) * Acap /
       (Vmyo * F);
-  dCai_t = (-Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
+  dCai = (-Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
                (ICaL + ICaT + ICab + IpCa - 2 * INCX) *
-               Acap / (2 * Vmyo * F));*/
-
-  alp2 = TRPNtot + CMDNtot + KmTRPN + KmCMDN - Cai;
-  alp1 = KmTRPN * KmCMDN - Cai * (KmTRPN + KmCMDN) + TRPNtot * KmCMDN + CMDNtot * KmTRPN;
-  alp0 = -KmTRPN * KmCMDN * Cai;
-  q = (3 * alp1 - (alp2 * alp2)) / 9;
-  r = (9 * alp2 * alp1 - 27 * alp0 - 2 * (alp2 * alp2 * alp2)) / 54;
-  t = pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3) -
-      q / (pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3));
-  dCai = abs(t - alp2/3);
-
-  dCaJSR = BJSR * (Jtr - Jrel);
+               Acap / (2 * Vmyo * F));
+  Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
+  CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
+  dCaJSR = Jtr - Jrel;
   dCaNSR = Jserca - Jtr * VJSR / VNSR;
-
+  std::cout << calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN) << " "
+            << calcium_buffer(1e-3, TRPNtot, KmTRPN, CMDNtot, KmCMDN) << " "
+            << calcium_buffer(1e-5, TRPNtot, KmTRPN, CMDNtot, KmCMDN) << std::endl;
   // Derivative for voltage
   dVdt = -(Iion);
 
@@ -321,8 +310,8 @@ void LivRudy2009::solve(){
   V += DT * dVdt;
   Nai += DT * dNai;
   Ki += DT * dKi;
-  Cai += DT * dCai;
-  CaJSR += DT * dCaJSR;
+  Cai_t += DT * dCai;
+  CaJSR_t += DT * dCaJSR;
   CaNSR += DT * dCaNSR;
   Jrel += DT * dJreldt;
 
@@ -337,6 +326,39 @@ void LivRudy2009::solve(){
   xKr = (xKrinf - (xKrinf - xKr) * exp(-DT / tauxKr));
   xs1 = (xsinf - (xsinf - xs1) * exp(-DT / tauxs1));
   xs2 = (xsinf - (xsinf - xs2) * exp(-DT / tauxs2));
+}
+
+double LivRudy2009::calcium_buffer(
+    double ca_t, double a1, double b1, double a2, double b2) {
+  alp2 = a1 + a2 + b1 + b2 - ca_t;
+  alp1 = b1 * b2 - ca_t * (b1 + b2) + a1 * b2 + a2 * b1;
+  alp0 = -b1 * b2 * ca_t;
+  q = (3 * alp1 - (alp2 * alp2)) / 9;
+  r = (9 * alp2 * alp1 - 27 * alp0 - 2 * (alp2 * alp2 * alp2)) / 54;
+  t = pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3) -
+      q /  pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3);
+
+  complex<double> t_d = pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3) -
+      q /  pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3);
+
+  std::complex<double> z2(-1.0, 0);  // square root of -1
+    std::cout << "-1^0.5 = " << pow(z2, 0.5) << '\n';
+  std::cout
+      << a1 << " "
+      << a2 << " "
+      << b1 << " "
+      << b2 << " "
+      << ca_t << " "
+       << alp0 << " "
+       << alp1 << " "
+       << alp2 << " "
+       << q << " "
+       << r << " "
+      << t << " "
+      << t_d << " "
+      << std::endl;
+   return abs(t - alp2/3);
+
 }
 
 // Voltage Clamp Function
@@ -436,9 +458,9 @@ void LivRudy2009::reset(){ // Reset to initial conditions
   // Initial conditions after conc change used in dynamic clamp experiments
   // 1800 beats at 2Hz pacing
   V = -84.7407;
-  Cai = 0.000188743;
+  Cai_t = 0.1e-3;
   CaNSR = 2.64642;
-  CaJSR = 1.9578;
+  CaJSR_t = 1.9578;
   Nai = 14.2117;
   Ki = 137.978;
   m = 0.00161367;
