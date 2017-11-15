@@ -51,14 +51,12 @@
 #include <vector>
 #include <complex>
 
-#include "RealTimeMath.hpp"
-
 class LivRudy2009 {
 
  public:
   LivRudy2009(void);
   ~LivRudy2009(void);
-  double calcium_buffer(double, double, double, double, double);
+
   /*
     Current clamp model
     Returns 1 if model passed crash tests, 0 if it crashed
@@ -108,9 +106,9 @@ class LivRudy2009 {
   */
   void setNai(double new_c) { Nai = new_c; };
   void setKi(double new_c) { Ki = new_c; };
-  void setCai(double new_c) { Cai = new_c; };
+  void setCai_t(double new_c) { Cai = new_c; };
   void setCaNSR(double new_c) { CaNSR = new_c; };
-  void setCaJSR(double new_c) { CaJSR = new_c; };
+  void setCaJSR_t(double new_c) { CaJSR = new_c; };
 
   /*
     Set conditions
@@ -182,13 +180,17 @@ class LivRudy2009 {
   double getNai() { return Nai; };
   double getKi() { return Ki; };
   double getCai() { return Cai; };
+  double getCai_t() { return Cai; };
   double getCaJSR() { return CaJSR; };
+  double getCaJSR_t() { return CaJSR; };
   double getCaNSR() { return CaNSR; };
 
  private:
-  RealTimeMath RTMath;
+  // Model solver
+  void solve();
 
-  void solve(); // Model current solver
+  // Calcium buffering approximation
+  double calcium_buffer(double, double, double, double, double);
 
   // Loop variable
   int i;
@@ -267,7 +269,7 @@ class LivRudy2009 {
   double Jserca_; // Jserca scaling factor, nominal = 1.0
 
   // Derivatives
-  double dNai, dKi, dCai, dCaJSR, dCaNSR, dJreldt;
+  double dNai, dKi, dCai_t, dCaJSR_t, dCaNSR, dJreldt;
 
   //// Model Constants
   double F; // Faraday's constant, C/mol

@@ -296,9 +296,9 @@ void LivRudy2009::solve(){
   dNai = -NaIon * Acap / (Vmyo * F);
   // Injected current assumed to be due to potassium flux
   dKi = -KIon * Acap / (Vmyo * F);
-  dCai = Bi * (-Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
-               CaIon * Acap / (2 * Vmyo * F));
-  dCaJSR = BJSR * (Jtr - Jrel);
+  dCai_t = -Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
+               CaIon * Acap / (2 * Vmyo * F);
+  dCaJSR_t = Jtr - Jrel;
   dCaNSR = Jserca - Jtr * VJSR / VNSR;
 
   // Derivative for voltage
@@ -308,8 +308,8 @@ void LivRudy2009::solve(){
   V += DT * dVdt;
   Nai += DT * dNai;
   Ki += DT * dKi;
-  Cai_t += DT * dCai;
-  CaJSR_t += DT * dCaJSR;
+  Cai_t += DT * dCai_t;
+  CaJSR_t += DT * dCaJSR_t;
   CaNSR += DT * dCaNSR;
   Jrel += DT * dJreldt;
 
@@ -396,64 +396,24 @@ const int LivRudy2009::getStatus() {
 
 // Model Reset Function
 void LivRudy2009::reset(){ // Reset to initial conditions
-  // Initial conditions at 0 beats
-  // V = -84.7;
-  // Cai = 0.0822e-3;
-  // CaNSR = 1.25;
-  // CaJSR = 1.25;
-  // Nai = 9.71;
-  // Ki = 142.82;
-  // m = 2.46e-4;
-  // h = 0.99869;
-  // j = 0.99887;
-  // d = 1e-4;
-  // f = 0.983;
-  // b = 1e-4;
-  // g = 0.983;
-  // xKr = 0.229;
-  // xs1 = 1e-4;
-  // xs2 = 1e-4;
-  // Jrel = 1e-4;
-
-  // Initial conditions
-  // 1800 beats at 2Hz pacing
-  // V = -88.9324;
-  // Cai = 0.00018233;
-  // CaNSR = 2.56419;
-  // CaJSR = 1.86826;
-  // Nai = 16.085;
-  // Ki = 136.156;
-  // m = 0.000799816;
-  // h = 1.97906;
-  // j = 0.995711;
-  // d = 9.88131e-324;
-  // f = 0.999401;
-  // b = 0.000970279;
-  // g = 0.979855;
-  // xKr = 0.000136487;
-  // xs1 = 0.0173837;
-  // xs2 = 0.0635809;
-  // Jrel = 6.84942e-40;
-
-  // Initial conditions after conc change used in dynamic clamp experiments
-  // 1800 beats at 2Hz pacing
-  V = -84.7216;
-  Cai_t = 0.000189379;
-  CaNSR = 2.64793;
-  CaJSR_t = 1.95206;
-  Nai = 14.2728;
-  Ki = 137.771;
-  m = 0.0016188;
-  h = 3.63989;
-  j = 0.989864;
+  // Initial conditions - 2Hz pacing
+  V = -84.6684;
+  Cai_t = 0.0231045;
+  CaNSR = 2.64824;
+  CaJSR_t = 9.04718;
+  Nai = 14.2605;
+  Ki = 137.491;
+  m = 0.00163319;
+  h = 3.66776;
+  j = 0.989748;
   d = 9.88131e-324;
-  f = 0.998935;
-  b = 0.00143203;
-  g = 0.97522;
-  xKr = 0.000250239;
-  xs1 = 0.0226794;
-  xs2 =0.0745219;
-  Jrel =2.28633e-39;
+  f = 0.998927;
+  b = 0.00143909;
+  g = 0.975127;
+  xKr = 0.000252203;
+  xs1 = 0.0227544;
+  xs2 = 0.0746654;
+  Jrel = 2.34309e-39;
 
   Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
   CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
@@ -466,9 +426,9 @@ void LivRudy2009::setConditions(std::vector<double> &conditions) {
         " conditions were given." << std::endl;
 
   V = conditions.at(0);
-  Cai = conditions.at(1);
+  Cai_t = conditions.at(1);
   CaNSR = conditions.at(2);
-  CaJSR = conditions.at(3);
+  CaJSR_t = conditions.at(3);
   Nai = conditions.at(4);
   Ki = conditions.at(5);
   m = conditions.at(6);
@@ -488,9 +448,9 @@ std::vector<double> LivRudy2009::getConditions() {
   std::vector<double> conditions;
 
   conditions.push_back(V);
-  conditions.push_back(Cai);
+  conditions.push_back(Cai_t);
   conditions.push_back(CaNSR);
-  conditions.push_back(CaJSR);
+  conditions.push_back(CaJSR_t);
   conditions.push_back(Nai);
   conditions.push_back(Ki);
   conditions.push_back(m);
