@@ -35,7 +35,7 @@
 #include <iostream>
 
 #include "../include/LivRudy2009.hpp"
-
+using namespace std;
 // Either cmath exp or fast exponent funciton used
 
 LivRudy2009::LivRudy2009(void) { // Model initialization
@@ -298,9 +298,19 @@ void LivRudy2009::solve(){
   // Injected current assumed to be due to potassium flux
   dKi = -(I_Inject + IKr + IKs + IK1 + IKp + ICaL_K - 2 * INaK) * Acap /
       (Vmyo * F);
-  dCai = Bi * (-Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
+  dCai_t = (-Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
                (ICaL + ICaT + ICab + IpCa - 2 * INCX) *
-               Acap / (2 * Vmyo * F));
+               Acap / (2 * Vmyo * F));*/
+
+  alp2 = TRPNtot + CMDNtot + KmTRPN + KmCMDN - Cai;
+  alp1 = KmTRPN * KmCMDN - Cai * (KmTRPN + KmCMDN) + TRPNtot * KmCMDN + CMDNtot * KmTRPN;
+  alp0 = -KmTRPN * KmCMDN * Cai;
+  q = (3 * alp1 - (alp2 * alp2)) / 9;
+  r = (9 * alp2 * alp1 - 27 * alp0 - 2 * (alp2 * alp2 * alp2)) / 54;
+  t = pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3) -
+      q / (pow(r + pow((pow(q,3) + pow(r,2)), 0.5), 1/3));
+  dCai = abs(t - alp2/3);
+
   dCaJSR = BJSR * (Jtr - Jrel);
   dCaNSR = Jserca - Jtr * VJSR / VNSR;
 

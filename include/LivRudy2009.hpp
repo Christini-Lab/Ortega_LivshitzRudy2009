@@ -359,6 +359,8 @@ class LivRudy2009 {
   // Buffers in JSR
   double CSQNtot;
   double KmCSQN;
+
+  double alp0, alp1, alp2, q, r, t;
 };
 
 #endif
