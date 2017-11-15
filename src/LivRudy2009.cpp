@@ -290,17 +290,17 @@ void LivRudy2009::solve(){
               (TRPNtot * KmTRPN / ((Cai + KmTRPN) * (Cai + KmTRPN))));
 
   // Total Current
-  Iion = INa + INab + ICaL + ICaL_Na + ICaL_K + ICab + ICaT + IpCa + IKr +
-      IKs + IK1 + IKp + INCX + INaK + I_Inject;
+  NaIon = INa + INab + 3 * INCX + ICaL_Na + 3 * INaK;
+  KIon = I_Inject + IKr + IKs + IK1 + IKp + ICaL_K - 2 * INaK;
+  CaIon = ICaL + ICab + IpCa - 2 * INCX + ICaT;
+  Iion = NaIon + KIon + CaIon;
 
   // Derivatives for ionic concentration
-  dNai = -(INa + INab + ICaL_Na + 3 * INCX + 3 * INaK) * Acap / (Vmyo * F);
+  dNai = -NaIon * Acap / (Vmyo * F);
   // Injected current assumed to be due to potassium flux
-  dKi = -(I_Inject + IKr + IKs + IK1 + IKp + ICaL_K - 2 * INaK) * Acap /
-      (Vmyo * F);
+  dKi = -KIon * Acap / (Vmyo * F);
   dCai = Bi * (-Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
-               (ICaL + ICaT + ICab + IpCa - 2 * INCX) *
-               Acap / (2 * Vmyo * F));
+               CaIon * Acap / (2 * Vmyo * F));
   dCaJSR = BJSR * (Jtr - Jrel);
   dCaNSR = Jserca - Jtr * VJSR / VNSR;
 

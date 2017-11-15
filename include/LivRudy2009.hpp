@@ -257,6 +257,7 @@ class LivRudy2009 {
   double ICaT; // T-type calcium current
   double xK1, IK1, RKr, IKr, IKs, Kp, IKp; // K currents
   double sigma_NaK, fNaK, INaK, INCX; // Pumps and transporters
+  double NaIon, KIon, CaIon;
   double Iion; // Total current
   double Iinjected; // Injected current
 
