@@ -233,7 +233,8 @@ void LivRudy2009::solve(){
   xKrinf = 1.0 / (1.0 + exp(-(V + 21.5) / 7.5)); // xKrinf
   if (V > -14.21 && V < -14.19) // if V = -14.2, divide by 0 error
     tauxKr = 85.830287334611480; // tauxKr
-  tauxKr = (1.0 / (0.00138 * (V + 14.2) /
+  else
+    tauxKr = (1.0 / (0.00138 * (V + 14.2) /
                       (1.0 - exp(-0.123 * (V + 14.2))) + 0.00061 *
                       (V + 38.9) / (exp(0.145 *(V + 38.9)) -1.0))); // tauxKr
   if (V > -30.01 && V < -29.99) // if V = -30, divide by 0 error
