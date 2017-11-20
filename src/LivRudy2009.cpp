@@ -135,16 +135,18 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   KmCSQN = 0.8;
 
   // Gating Variable Lookup Table
-  lkup = new double[20000][20];
+  V_min = -200;
+  V_step = 0.01;
+  int s = V_min * -2 / V_step;
+  lkup = new double[s][20];
   Vx = 0; // Voltage placeholder for lookup table
-  V_min = -1000;
 
   // Lookup Table Initialization
-  for (z = 0; z < 20000; z++) {
-    Vx = V_min + 0.1 * z;
+  for (z = 0; z < s; z++) {
+    Vx = V_min + V_step * z;
 
     // Voltage
-    lkup[z][0] = V_min + 0.1 * z;
+    lkup[z][0] = V_min + V_step * z;
 
     // H-gate
     lambda_na = 1 - 1 / (1 + exp(-(Vx + 40) / 0.024));
@@ -209,7 +211,8 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
     lkup[z][15] = 1 / (1 + exp(-(Vx + 21.5) / 7.5)); // xKrinf
     if ( Vx > -14.21 && Vx < -14.19 ) // if V = -14.2, divide by 0 error
       lkup[z][16] = 85.830287334611480; // tauxKr
-    lkup[z][16] = (1 / (0.00138 * (Vx + 14.2) /
+    else
+      lkup[z][16] = (1 / (0.00138 * (Vx + 14.2) /
                         (1 - exp(-0.123 * (Vx + 14.2))) + 0.00061 *
                         (Vx + 38.9) / (exp(0.145 *(Vx + 38.9)) -1))); // tauxKr
     lkup[z][17] = tau_xs1; // tau_xs1
@@ -339,8 +342,8 @@ void LivRudy2009::solve(){
   Jrel += DT * dJreldt;
 
   // Set gating variables using lookup table
-  ilow = fabs((V - V_min) / 0.1);
-  linext = -(-V + lkup[ilow + 1][0]) / 0.1;
+  ilow = fabs((V - V_min) / V_step);
+  linext = -(-V + lkup[ilow + 1][0]) / V_step;
   hinf = (lkup[ilow + 1][1] - lkup[ilow][1]) * linext + lkup[ilow + 1][1];
   tauh = (lkup[ilow + 1][2] - lkup[ilow][2]) * linext + lkup[ilow + 1][2];
   tauj = (lkup[ilow + 1][3] - lkup[ilow][3]) * linext + lkup[ilow + 1][3];

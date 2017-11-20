@@ -201,6 +201,7 @@ class LivRudy2009 {
 
   // Lookup Table variables
   double V_min;
+  double V_step;
   double Vx;
   int z;
   int ilow;
