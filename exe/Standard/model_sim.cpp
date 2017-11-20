@@ -136,9 +136,9 @@ int main() {
 
   std::vector<double> conditions(model.getConditions());
   std::cout << "Conditions at end of simulation: " << std::endl;
-  for (auto it = conditions.begin(); it != conditions.end(); it++) {
-    std::cout << *it << std::endl;
-  }
+  for (auto i: conditions)
+    std::cout << i << std::endl;
+  std::cout << std::endl;
 
   // Data output
   // Voltage and intracellular concentration traces
