@@ -156,7 +156,7 @@ void LivRudy2009::solve(){
   bh = (1.0 - lambda_na) / (0.13 * (1.0 + exp((V + 10.66)/(-11.1)))) +
       lambda_na * (3.56 * exp(0.079 * V) + 3.1 * 1e5 * exp(0.35 * V));
   hinf = ah / (ah + bh); // hinf
-  hinf= 1 / (ah + bh); // tauh
+  tauh = 1 / (ah + bh); // tauh
   // J-gate
   aj =  lambda_na *
       (-1.2714e5 * exp(0.2444 * V) - 3.474e-5 * exp(-0.04391 * V)) *
