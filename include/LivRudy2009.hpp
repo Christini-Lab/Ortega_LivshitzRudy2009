@@ -51,6 +51,8 @@
 #include <vector>
 #include <complex>
 
+#include "RealTimeMath.hpp"
+
 class LivRudy2009 {
 
  public:
@@ -186,6 +188,8 @@ class LivRudy2009 {
   double getCaNSR() { return CaNSR; };
 
  private:
+  RealTimeMath RTMath;
+
   // Model solver
   void solve();
 
@@ -194,6 +198,14 @@ class LivRudy2009 {
 
   // Loop variable
   int i;
+
+  // Lookup Table variables
+  double V_min;
+  double Vx;
+  int z;
+  int ilow;
+  double linext;
+  double (*lkup)[20];
 
   // Model parameters
   double V;
