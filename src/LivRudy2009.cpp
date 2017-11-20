@@ -398,23 +398,23 @@ const int LivRudy2009::getStatus() {
 // Model Reset Function
 void LivRudy2009::reset(){ // Reset to initial conditions
   // Initial conditions - 2Hz pacing
-  V = -84.6684;
-  Cai_t = 0.0231045;
-  CaNSR = 2.64824;
-  CaJSR_t = 9.04718;
-  Nai = 14.2605;
-  Ki = 137.491;
-  m = 0.00163319;
-  h = 3.66776;
-  j = 0.989748;
+  V = -84.6964;
+  Cai_t = 0.0218933;
+  CaNSR = 2.44962;
+  CaJSR_t = 8.17769;
+  Nai = 13.919;
+  Ki = 137.879;
+  m = 0.0016256;
+  h = 0.983832;
+  j = 0.989807;
   d = 9.88131e-324;
-  f = 0.998927;
-  b = 0.00143909;
-  g = 0.975127;
-  xKr = 0.000252203;
-  xs1 = 0.0227544;
-  xs2 = 0.0746654;
-  Jrel = 2.34309e-39;
+  f = 0.998914;
+  b = 0.00143546;
+  g = 0.974959;
+  xKr = 0.000252518;
+  xs1 = 0.0223878;
+  xs2 = 0.0726541;
+  Jrel = 1.73625e-41;
 
   Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
   CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
