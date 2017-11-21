@@ -63,13 +63,31 @@ int main(int argc, char *argv[]) {
   std::cout << "Starting restitution portrait simulation" << std::endl;
   double voltage;
   double stim = 0;
-  double dataDt = 0.1; // Dt of data output
-  double maxDt = model.getDt(); // Maximum dt for adaptive timestep
-  double dt = model.getDt(); // Adaptive timestep
-  double dVdt; // dVdt used to modify timestep
-  double dVdtThresh = maxDt * 2; // If Vm changes less than this, set dt to max
+  double dataDt = 0.2; // Dt of data output
+  double dataTime = 0;
+  double maxDt = 0.1; // Adaptive timestep maximum dt - 10 kHz
+  double minDt = 0.001; // Adaptive timestep minimum dt - 1000 kHz
+  double dt = maxDt; // Dt changes each time step, initially set to max
+  model.setDt(dt); // Set model dt
+
+  // Changes in voltage and intracellular concentrations determine adaptive
+  // changes in dt
+  double dVdt;
+  double dCaidt;
+  double dNaidt;
+  double dKidt;
+
+  // If Vm or intracellular concentrations changes less than this, set dt to max
+  double dXdtThresh = maxDt * 2;
+  double maxDx; // Biggest change between voltage or ions
+
   double v0 = model.getVm(); // Previous timestep voltage
-  int steps = dt / dataDt;
+  double cai0 = model.getCai(); // Previous timestep intracellular calcium
+  double nai0 = model.getNai(); // Previous timestep intracellular sodium
+  double ki0 = model.getKi(); // Previous timestep intracellular potassium
+
+  int steps = dataDt / dt;
+  int beatIdx = 0;
   int stimAmp = 40; // pA/pF
   int stimLength = 1; // ms
 
@@ -77,7 +95,7 @@ int main(int argc, char *argv[]) {
   int startBCL = atof(argv[1]); // Starting BCL (ms)
   int endBCL = atof(argv[2]); // Desired ending BCL (ms)
   int incrementBCL = atof(argv[3]); // BCL change (ms)
-  int numBeatsPerBCL = 2000; // Number of stimulations for a BCL
+  int numBeatsPerBCL = 100; // Number of stimulations for a BCL
   int numApdSave = 10; // Number of APDs to save for each BCL
 
   // Data structures for output
@@ -97,7 +115,7 @@ int main(int argc, char *argv[]) {
     // Initial BCL is 1000 beats to ensure steady-state of model
     int beats;
     if (bcl == startBCL)
-      beats = 2000;
+      beats = 1000;
     else
       beats = numBeatsPerBCL;
 
@@ -107,38 +125,64 @@ int main(int argc, char *argv[]) {
     std::cout << "BCL: " << bcl << std::endl;
     // Each time increment is equivalent to dataDt
     for (int time = 0; time < protocolLength; time++) {
+      // Voltage and intracellular concentrations
+      // dXdt for each
       dVdt = std::abs(model.getVm() - v0) / dataDt; // Calculate dVdt
+      dCaidt = std::abs(model.getCai() - cai0) / dataDt * 1e4; // Calculate dVdt
+      dNaidt = std::abs(model.getNai() - nai0) / dataDt; // Calculate dVdt
+      dKidt = std::abs(model.getKi() - ki0) / dataDt; // Calculate dVdt
+      // Previous timestep values
       v0 = model.getVm();
+      cai0 = model.getCai();
+      nai0 = model.getNai();
+      ki0 = model.getKi();
 
-      // Stimulation
-      if (time % bclCounter <= stimCounter)
+      // Stimulation and adaptive dt calculation
+      if (time % bclCounter < stimCounter) { // Stimulation on
         stim = -1 * stimAmp;
-      else
-        stim = 0;
-
-      // Adaptive dt calculation
-      if (dVdt < dVdtThresh) {
-        dt = maxDt;
-        model.setDt(dt);
+        dt = minDt; // Set min dt to minimum Dt during stimulation
         steps = dataDt / dt;
-      }
-      else { // dVdt is > than dVdtThresh, so reduce dt
-        steps = std::ceil(dVdt / dVdtThresh); // Round up to integer
-
-        if (steps > maxDt / 0.001)
-          steps = maxDt / 0.001; // Set min dt to 1000kHz
-
-        dt = maxDt / steps;
         model.setDt(dt);
+      }
+      else { // Stimulation off
+        stim = 0;
+        // Adaptive dt calculation - Fast changes in volage or ions will result
+        // in smaller dt
+        // Calcium is scaled due to its relatively small concentration compared
+        // to other ions
+
+        // Find maximum change
+        maxDx = std::max({dVdt, dCaidt, dNaidt, dKidt});
+
+        // If changes are slow, set to maximum Dt
+        if (maxDx < dXdtThresh) {
+          dt = maxDt; // Set to maximum dt
+          steps = dataDt / dt; // Calculate intregration steps
+          model.setDt(dt); // Set model dt
+        }
+        // If changes are fast, lower dt
+        else {
+          steps = std::ceil(maxDx / dXdtThresh);
+          if (steps > dataDt / minDt)
+            steps = dataDt / minDt;
+
+          // Calculate dt based on desired integration steps
+          dt = dataDt / steps;
+          model.setDt(dt); // Set model dt
+        }
       }
 
       for (int i = 0; i < steps; i++) {
         model.iClamp(stim);
       }
 
-      if (model.getStatus()) { // Check for model crash
+      if (model.getStatus()) { // If model did not crash, save data
+
         // Push voltage to APD calculator
         apdCalc.push_voltage(model.getVm());
+
+        // Increment data time
+        dataTime += dataDt;
       }
       else { // Model crash
         std::cout << "ERROR: Model crash" << std::endl;
