@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
   int startBCL = atof(argv[1]); // Starting BCL (ms)
   int endBCL = atof(argv[2]); // Desired ending BCL (ms)
   int incrementBCL = atof(argv[3]); // BCL change (ms)
-  int numBeatsPerBCL = 100; // Number of stimulations for a BCL
+  int numBeatsPerBCL = 200; // Number of stimulations for a BCL
   int numApdSave = 10; // Number of APDs to save for each BCL
 
   // Data structures for output
