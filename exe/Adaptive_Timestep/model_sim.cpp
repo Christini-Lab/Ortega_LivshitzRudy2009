@@ -32,8 +32,6 @@
  *
  ***/
 
-//#define TRACESAVE // Define for trace data of voltage and concentrations
-
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -98,11 +96,12 @@ int main() {
 
   int protocolLength = beats * bcl / dataDt;
 
-#ifdef TRACESAVE
-  // Time, voltage, current, and intracellular concentrations
+
+  // Time, voltage, current, and intracellular concentrations for last 5 beats
   std::vector< std::vector<double> >
-      data(6, std::vector<double>(protocolLength));
-#endif
+      data(6, std::vector<double>(5 * bcl / dataDt));
+  int offset = protocolLength - data.at(0).size();
+
 
   // Diastolic voltage and intracellular concentrations per beat
   std::vector< std::vector<double> > dia_data(5, std::vector<double>(beats));
@@ -186,20 +185,18 @@ int main() {
     }
 
     if (model.getStatus()) { // If model did not crash, save data
-#ifdef TRACESAVE
-      data.at(0).at(time) = dataTime; // Time
-      data.at(1).at(time) = model.getVm(); // Voltage
-      data.at(2).at(time) = stim; // Injected current
-      data.at(3).at(time) = model.getNai(); // Intracellular Na
-      data.at(4).at(time) = model.getKi(); // Intracellular K
-      data.at(5).at(time) = model.getCai(); // Intracellular Ca
-#endif
-
+      if (time >= offset) {
+        data.at(0).at(time - offset) = dataTime; // Time
+        data.at(1).at(time - offset) = model.getVm(); // Voltage
+        data.at(2).at(time - offset) = stim; // Injected current
+        data.at(3).at(time - offset) = model.getNai(); // Intrac Na
+        data.at(4).at(time - offset) = model.getKi(); // Intra K
+        data.at(5).at(time - offset) = model.getCai(); // Intra Ca
+        // Increment data time
+        dataTime += dataDt;
+      }
       // Push voltage to APD calculator
       apdCalc.push_voltage(model.getVm());
-
-      // Increment data time
-      dataTime += dataDt;
     }
     else { // Model crash
       std::cout << "ERROR: Model crash" << std::endl;
@@ -207,7 +204,6 @@ int main() {
     }
   }
   std::cout << "Simulation finished" << std::endl;
-#ifdef TRACESAVE
   std::cout << "Min voltage: "
             << *std::min_element(data.at(1).begin(), data.at(1).end())
             << std::endl
@@ -216,7 +212,6 @@ int main() {
             << std::endl
             << "Simulation length: "
             << data.at(0).size() << std::endl;
-#endif
 
   std::vector<double> conditions(model.getConditions());
   std::cout << "Conditions at end of simulation: " << std::endl;
@@ -227,12 +222,11 @@ int main() {
   // Data output
   std::ofstream dataFile;
 
-#ifdef TRACESAVE
   // Trace data output
   dataFile.open("trace_data.dat");
   dataFile << "Time,Voltage,Current,Nai,Ki,Cai" << std::endl;
   dataFile << std::setprecision(8);
-  for (int idx = 0; idx < protocolLength; idx++)
+  for (int idx = 0; idx < data.at(0).size(); idx++)
     dataFile << data.at(0).at(idx) << ","
              << data.at(1).at(idx) << ","
              << data.at(2).at(idx) << ","
@@ -240,7 +234,6 @@ int main() {
              << data.at(4).at(idx) << ","
              << data.at(5).at(idx) << std::endl;
   dataFile.close();
-#endif
 
   // Diastolic concentration
   dataFile.open("dia_data.dat");
