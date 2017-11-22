@@ -64,7 +64,6 @@ int main(int argc, char *argv[]) {
   double voltage;
   double stim = 0;
   double dataDt = 0.2; // Dt of data output
-  double dataTime = 0;
   double maxDt = 0.1; // Adaptive timestep maximum dt - 10 kHz
   double minDt = 0.001; // Adaptive timestep minimum dt - 1000 kHz
   double dt = maxDt; // Dt changes each time step, initially set to max
@@ -102,10 +101,10 @@ int main(int argc, char *argv[]) {
   std::vector<double> apdData;
   std::vector<double> bclData;
 
-  int stimCounter = stimLength / dt; // Unitless to prevent rounding errors
+  int stimCounter = stimLength / dataDt; // Unitless to prevent rounding errors
 
   // APD calculation class initialization
-  APD_Calculator apdCalc(model.getVm(), dt);
+  APD_Calculator apdCalc(model.getVm(), dataDt);
 
   bool done = false; // Flag for loop
   int bcl = startBCL;
@@ -120,8 +119,8 @@ int main(int argc, char *argv[]) {
       beats = numBeatsPerBCL;
 
     int beatCount = 0;
-    int bclCounter = bcl / dt; // Unitless to prevent rounding errors
-    int protocolLength = beats * bcl / dt;
+    int bclCounter = bcl / dataDt; // Unitless to prevent rounding errors
+    int protocolLength = beats * bcl / dataDt;
     std::cout << "BCL: " << bcl << std::endl;
     // Each time increment is equivalent to dataDt
     for (int time = 0; time < protocolLength; time++) {
@@ -180,9 +179,6 @@ int main(int argc, char *argv[]) {
 
         // Push voltage to APD calculator
         apdCalc.push_voltage(model.getVm());
-
-        // Increment data time
-        dataTime += dataDt;
       }
       else { // Model crash
         std::cout << "ERROR: Model crash" << std::endl;
