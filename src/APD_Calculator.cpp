@@ -22,9 +22,14 @@ double APD_Calculator::get_apd() {
 }
 
 // Return most recent num action potentials duration calculated
+// Returns empty vector if number of request APs is too large
 std::vector<double> APD_Calculator::get_apd(int num) {
-  std::vector<double> retval(apd.end() - num, apd.end());
-  return retval;
+  if (apd.size() < num)
+    return {};
+  else {
+    std::vector<double> retval(apd.end() - num, apd.end());
+    return retval;
+  }
 }
 
 // Push voltage in real-time to APD calculating algorithm
