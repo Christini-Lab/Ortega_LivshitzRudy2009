@@ -13,8 +13,12 @@ void APD_Calculator::reset() {
 }
 
 // Return most recent action potential duration calculated
+// If no APD was recorded, return -1
 double APD_Calculator::get_apd() {
-  return apd.back();
+  if (apd.empty())
+    return -1;
+  else
+    return apd.back();
 }
 
 // Return most recent num action potentials duration calculated
