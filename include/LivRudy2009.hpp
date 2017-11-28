@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Weill Medical College of Cornell University
+ * Copyright (C) 2017 Weill Medical College of Cornell University
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as
@@ -21,26 +21,28 @@
  * 2009 Livshitz Rudy Model of a ventricular guinea pig myocyte
  * Biophysical Journal, 2009
  *
- * LivRudy2009.h, v3.0
+ * LivRudy2009.h, v4.0
  *
- * Author: Francis Ortega (v1.0-3.0)(2011 - 2016)
+ * Author: Francis Ortega (v1.0-4.0)(2011 - 2017)
  *
  *** NOTES
  *
  * Model equations taken from Matlab model created by Dr. Eric Sobie based
- * on Livshitz 2009 paper.  Model used in series of dynamic clamp experiments on
- * guinea pig ventricular cardiomyocytes.
+ * on Livshitz 2009 paper, which was used on Devenyi and Ortega 2016 dynamic
+ * clamp paper. More recently, the model has been revised to more closely match
+ * original MATLAB model from Livshitz and Rudy. Optimizations and modifications
+ * have been split off into different git branches.
  *
- * Standard math function exp(x) replaced with fastEXP(x) which uses PowFast.hpp
- * due to spikes in computation time of math.h function. - Now makes calls to
- * RealTimeMath Library, which in turn uses PowFast functions
- *
- * v1.0 - initial version
- * v1.1 - added rate changer
+ * v1.0 - Initial version
+ * v1.1 - Added rate changer
  * v1.2 - Replaced calls to PowFast library with calls to RealTimeMath library
  * v2.0 - Made compatible with and added to Model Cell Library (MCL)
  * v2.1 - Added parameter functions for use with gScaling DynClamp
  * v3.0 - Pulled out of MCL to be used in GA fitting of DynClamp scalings
+ * v4.0 - Split off all computational optimizations into its own git branch
+ *      - Implemented original Livshitz Rudy calcium buffering equations
+ *      - Reorganized and reviewed comments and equations
+ *      - Model now completely matches original, now defunct, MATLAB code
  *
  ***/
 
@@ -49,7 +51,7 @@
 #define LIVRUDY2009_H
 
 #include <vector>
-#include <complex>
+#include <complex> // Calcium buffering involves use of complex numbers
 
 class LivRudy2009 {
 
@@ -188,183 +190,229 @@ class LivRudy2009 {
  private:
   // Model solver
   void solve();
-
   // Calcium buffering approximation
   double calcium_buffer(double, double, double, double, double);
 
-  // Loop variable
-  int i;
+  double DT; // Model time-step (ms)
 
-  // Model parameters
-  double V;
-  double I_Inject;
-  double DT;
-
-  double dVdt;
-  double Cai;
-  double CaNSR;
-  double CaJSR;
-  double Nai;
-  double Ki;
-  double m;
-  double h;
-  double j;
-  double d;
-  double f;
-  double b;
-  double g;
-  double xKr;
-  double xs1;
-  double xs2;
-  double Jrel;
-
-  // Gating variables in lookup table
-  double lambda_na;
-  double ah;
-  double bh;
-  double aj;
-  double bj;
-  double am;
-  double bm;
-  double dinf_0;
-  double dinf_1;
-  double lambda_g;
-  double xsinf;
-  double tau_xs1;
-  double hinf;
-  double tauh;
-  double tauj;
-  double jinf;
-  double minf;
-  double taum;
-  double dinf;
-  double taud;
-  double finf;
-  double tauf;
-  double binf;
-  double taub;
-  double ginf;
-  double taug;
-  double xKrinf;
-  double tauxKr;
-  double tauxs1;
-  double tauxs2;
-
-  // Current Variables
-  double ENa, EK, EKs, ECa; // Reversal potetentials
-  double INa, INab; // Na current
-  double ICa_, ICaK_, ICaNa_, fCa, ICaL, ICaL_K, ICaL_Na; // L-type Ca current
-  double GCaL_; // L-type Ca current scaling factor, nominal = 1.0
-  double ICab; // Background calcium current
-  double IpCa; // Sarcolemmal calcium pump
-  double ICaT; // T-type calcium current
-  double xK1, IK1, RKr, IKr, IKs, Kp, IKp; // K currents
-  double sigma_NaK, fNaK, INaK, INCX; // Pumps and transporters
-  double NaIon, KIon, CaIon;
-  double Iion; // Total current
-  double Iinjected; // Injected current
-
-  // Intracellular Ca flux
-  double Jrelinf, tau_rel, Jserca, Jtr;
-  double Jserca_; // Jserca scaling factor, nominal = 1.0
-
-  // Derivatives
-  double dNai, dKi, dCai_t, dCaJSR_t, dCaNSR, dJreldt;
-
-  //// Model Constants
-  double F; // Faraday's constant, C/mol
-  double R; // gas constant, mJ/K
-  double T; // absolute temperature, K
-  double RTF;
-  double FRT;
-  double pi; // Pi
+  // Physical constants
+  const double F = 96485.0; // Faraday's constant (C/mol)
+  const double R = 8314.0; // Gas constant (mJ/K)
+  const double T = 310.0; // Absolute temperature at 37C (K)
+  const double RTF = R * T / F;
+  const double FRT = 1 / RTF;
+  const double pi = 4.0 * atan(1.0);
 
   // Cell Geometry
-  double length_cell; // Length of the cell (cm)
-  double radius; // Radius of the cell (cm)
-  double Vcell; // 3.801e-5 uL Cell volume (uL)
-  double Ageo; // 7.671e-5 cm^2 Geometric membrane area (cm^2)
-  double Acap; // 1.534e-4 cm^2 Capacitive membrane area (cm^2)
-  double Vmyo; // Myoplasm volume (uL)
-  double Vmito; // Mitochondria volume (uL)
-  double VNSR; // NSR volume (uL)
-  double VJSR; // JSR volume (uL)
-  double Vss;
+  const double length_cell = 0.01; // Length of the cell (cm)
+  const double radius = 0.0011; // Radius of the cell (cm)
+  const double Vcell = 1000 * pi * radius * radius *
+      length_cell; // Cell volume (uL)
+  const double Ageo = 2 * pi * radius * radius + 2 * pi * radius *
+      length_cell; // Geometric membrane area (cm^2)
+  const double Acap = 2 * Ageo; // Capacitive membrane area (cm^2)
+  double Vmyo = Vcell * 0.68; // Myoplasm volume (uL)
+  double Vmito = Vcell * 0.24; // Mitochondria volume (uL)
+  double VNSR = Vcell * 0.0552;; // NSR volume (uL)
+  double VJSR = Vcell * 0.0048; // JSR volume (uL)
 
-  // Cell Capacitance
-  double Cm;
+  // Cell Capacitance, implied 1 uF/cm^2
+  // const double Cm = 1.0;
 
-  // Fixed ionic concentrations
-  double Ko; // uM
-  double Nao; // uM
-  double Cao; // uM
+  // Voltage
+  double V; // Membrane voltage (mV)
+  double dVdt; // Change in voltage / Change in time (mV/ms)
 
-  // Na current constants
-  double GNa_; // mS/cm^2
-  double GNab;
-  //double GNaL_= 6.5e-3;
+  // Static extracellular ionic concentrations
+  double Ko; // Extracellular K concentration (mM)
+  double Nao; // Extracellular Na concentration (mM)
+  double Cao; // Extracellular Ca concentration (mM)
 
-  // Ca current constants
-  double PCa; // cm/s
-  double PCa_Na; // cm/s
-  double PCa_K; // cm/s
-  double PCab; // cm/s
-  double gamma_Cao; // dimensionless
-  double gamma_Cai; // dimensionless
-  double gamma_Nao; // dimensionless
-  double gamma_Nai; // dimensionless
-  double gamma_Ko; // dimensionless
-  double gamma_Ki; // dimensionless
+  // Myoplasmic ionic concentrations
+  double Nai; // Intracellular Na concentration (mM)
+  double Ki; // Intracellular K concentration (mM)
+  // Buffered calcium concentrations
+  double Cai; // Intracelluar Ca concentration (mM)
+  double CaNSR; // NSR Ca concentation (mM)
+  double CaJSR; // JSR Ca concentration (mM)
+  // Total calcium concentrations (buffered and unbuffered)
+  double Cai_t; // Total intracellular Ca concentration (mM)
+  double CaJSR_t; // Total JSR Ca concentration (mM)
 
-  //const double hLca = 1; // dimensionless, Hill coefficient
-  double KmCa; // Half saturation constant, mM
+  // Myoplasmic ionic concentration changes
+  double dNai; // Change in intracellular Na (mM)
+  double dKi; // Change in intracellular K (mM)
+  double dCai_t; // Change in total intracellular Ca (mM)
 
-  // T-type & background currents
-  double GCaT_;
-  double GCab_;
+  // JRS Ca concentration changes
+  double dCaJSR_t; // Change in total JSR Ca concentration (mM)
+  double Jrel; // JSR Ca release to myoplasm (mM/ms)
+  double GJrel_; // Jrel scaling parameter, nominal value = 1.0
+  double Jrelinf; // Steady-state value of JSR Ca release
+  double tau_rel; // JSR Ca release time constant
+  double Krel_inf; // Half-saturation coefficient of steady-state JSR Ca release
+  double Krel_tau; // Tau of the half-saturation coefficient
+  double hrel; // JSR Ca release hill coefficient
+  double alpha_rel; // JSR Ca release mplitude coefficient
+  double beta_tau; // Maximal value of JSR Ca release time constant
+  double dJrel; // Change in JSR Ca release to myoplasm (mM)
 
-  // K Currents
-  double GK1_;
-  double GKr_;
-  double GKs_;
-  double pKNa; // relative permeability of IKs, Na to K
-  double GKp_;
-  double INaK_; // Max. current through Na-K pump (uA/uF)
-  double KmNa_NaK; // Half-saturation concentration of NaK pump (mM)
-  double KmK_NaK; // Half-saturation concentration of NaK pump (mM)
-  double ksat;
-  double eta;
-  double alpha_rel;
-  double Krel_inf;
-  double hrel;
-  double beta_tau;
-  double Krel_tau;
-
-  // Pumps and Transporters
-  double IpCa_; // Max. Ca current through sarcolemmal Ca pump (uA/uF)
-  double KmpCa; // Half-saturation concentration of sarcolemmal Ca pump (mM)
-  double Vserca; // mM/ms
-  double Kmserca; // mM
-  double CaNSR_max;
-  double tau_transfer;
-  double kNCX;
-  double GNCX_; // Added scaling parameter, nominal value = 1.0
-  double GJrel_; // Added scaling parameter, nominal value = 1.0
+  // NSR Ca concentration changes
+  double dCaNSR; // Change in NSR Ca concentration (mM)
+  double Jserca; // Ca uptake from myoplasm to NSR due to SERCA (mM/ms)
+  double Jserca_; // Jserca scaling factor, nominal = 1.0
+  double Vserca; // Maximal current through SERCA (mM/ms)
+  double Kmserca; // Half-saturation concentration of SERCA (mM)
+  double CaNSR_max; // Maximal Ca concentration in NSR (mM)
+  double Jtr; // NSR Ca transfer to JSR (mM/ms)
+  double Jtr_tau; // Time constant of NSR Ca transfer to JSR (ms)
 
   // Buffers in cytosol
-  double TRPNtot;
-  double KmTRPN;
-  double CMDNtot;
-  double KmCMDN;
+  double TRPNtot; // Maximal Ca buffered in troponin (mM)
+  double KmTRPN; // Equilibrium constant of buffering for troponin (mM)
+  double CMDNtot; // Maximal Ca buffered in calmodulin (mM)
+  double KmCMDN; // Equilibrium connstant of buffering for calmodulin (mM)
 
-  // Buffers in JSR
-  double CSQNtot;
-  double KmCSQN;
-
+  // Calcium buffering analytical computation parameters
   double alp0, alp1, alp2;
   double q, r;
   std::complex<double> qr, root_qr, cuberoot_rqr, t;
-  double Cai_t, CaJSR_t;
+
+  // Buffers in JSR
+  double CSQNtot; // Maximal Ca buffered in calsequestrin (mM)
+  double KmCSQN; // Equilibrium connstant of buffering for calsequestrin (mM)
+
+  // Na currents
+  double ENa; // Na reversal potential (mV)
+
+  // Fast Na channel current
+  double INa; // Fast Na current (uA/uF)
+  double GNa_; // Fast Na current conductance (mS/uF)
+  double m; // Fast Na current activation gate
+  double minf; // Fast Na current activation gate steady-state value
+  double taum; // Fast Na current activation gate time constant (1/ms)
+  double h; // Fast Na current inactivation gate
+  double hinf; // Fast Na current inactivation gate steady-state value
+  double tauh; // Fast Na current inactivation gate time constant (1/ms)
+  double j; // Fast Na current slow inactivation gate
+  double jinf; // Fast Na current slow inactivation gate steady-state value
+  double tauj; // Fast Na current slow inactivation gate time constant (1/ms)
+  double lambda_na; // Auxiliary function to remove singularities
+  double am; // Fast Na current alpha-m rate constant (1/ms)
+  double bm; // Fast Na current beta-m rate constant (1/ms)
+  double ah; // Fast Na current alpha-h rate constant (1/ms)
+  double bh; // Fast Na current beta-h rate constant (1/ms)
+  double aj; // Fast Na current alpha-j rate constant (1/ms)
+  double bj; // Fast Na current beta-j rate constant (1/ms)
+
+  // Time-independent background Na current
+  double INab; // Background Na current (uA/uF)
+  double GNab; // Background Na conductance (mS/uF)
+
+  // K currentsa
+  double EK; // K reversal potential (mV)
+
+  // Time-independent K current
+  double IK1; // Time-independent K current (uA/uF)
+  double GK1_; // Time-independent K current conductance (mS/uF)
+  double xK1; // Time-independent K current steady-state value
+
+  // Fast component of delayed rectifier K current
+  double IKr; // Rapidly activating K current (uA/uF)
+  double GKr_; // Rapidly activating K current conductance (mS/uF)
+  double xKr; // Rapidly activating K current activation gate
+  double xKrinf; // Rapidly activating K activation gate steady-state value
+  double tauxKr; // Rapidly activating K activation gate time constant (1/ms)
+  double RKr; // Rapidly activating K current inactivation gate
+
+  // Slow component of delayed rectifier current
+  double IKs; // Slowly activating K current (uA/uF)
+  double EKs; // Slowly activating K current reversal potential (mV)
+  double GKs_; // Slowly activating K current conductance (mS/uF)
+  double xs1; // Slowly activating K current fast activation gate
+  double tauxs1; // Fast activation gate time constant (1/ms)
+  double xs2; // Slowly activating K current slow activation gate
+  double tauxs2; // Slow activation gate time constant (1/ms)
+  double xsinf; // Slowly activating K current activation steady-state value
+  double pKNa; // Slowly activating K current Na to K permeability ratio
+
+  // Plateau K current
+  double IKp; // Plateau K current (uA/uF)
+  double GKp_; // Plateau K current conductance (mS/uF)
+  double Kp; // Plateau K current factor
+
+  // Ca currents
+  double ECa; // Ca reversal potential (mV)
+
+  // L-type Ca channel current
+  double ICaL; // Ca current through L-type Ca channel (uA/uF)
+  double ICa_; // Ca maximal current through L-type Ca channel (uA/uF)
+  double ICaL_K; // K current through L-type Ca channel (uA/uF)
+  double ICaK_; // K maximal current through L-type Ca channel (uA/uF)
+  double ICaL_Na; // Na current through L-type Ca channel (uA/uF)
+  double ICaNa_; // Na maximal current through L-type Ca channel (uA/uF)
+  double GCaL_; // L-type Ca current scaling factor, nominal = 1.0
+  double d; // L-type Ca current V-dependent activation gate
+  double dinf_0;
+  double dinf_1;
+  double dinf; // L-type V-dependent activation gate steady-state value
+  double taud; // L-type V-dependent activation gate time connstant (1/ms)
+  double f; // L-type Ca current V-dependent inactivation gate
+  double finf; // L-type V-dependent inactivation gate steady-state value
+  double tauf; // L-type V-dependent inactivation gate time constant (1/ms)
+  double fCa; // L-type Ca current Ca-dependent inactivation gate
+  double KmCa; // Ca-dependent inactivation gate half-saturation constant (mM)
+  double PCa; // Ca membrane permeability (cm/s)
+  double PCa_Na; // Na membrane permeability (cm/s)
+  double PCa_K; // K membrane permeability (cm/s)
+  double gamma_Cao; // L-type Ca activity coefficient of extracellular Ca
+  double gamma_Cai; // L-type Ca activity coefficient of intracellular Ca
+  double gamma_Nao; // L-type Ca aActivity coefficient of extracellular Na
+  double gamma_Nai; // L-type Ca activity coefficient of intracellular Na
+  double gamma_Ko; // L-type Ca activity coefficient of extracellular K
+  double gamma_Ki; // L-type Ca activity coefficient of intracellular K
+
+  // T-type Ca channel current
+  double ICaT; // T-type Ca current (uA/uF)
+  double GCaT_; // T-type Ca current conductance (mS/uF)
+  double b; // T-type Ca current activation gate
+  double binf; // T-type Ca current activation gate steady-state value
+  double taub; // T-type Ca current activation gate time constant (1/ms)
+  double g; // T-type Ca current inactivation gate
+  double ginf; // T-type Ca current activation gate steady-state value
+  double taug; // T-type Ca current activation gate time constant (1/ms)
+  double lambda_g; // Auxiliary function to remove singularities
+
+  // Time-independent background Ca current
+  double ICab; // Time-independent background Ca current (uA/uF)
+  double GCab_; // Time independent background Ca current conductance (mS/uF)
+
+  // Pumps and transporters
+
+  // Na-K Pump
+  double INaK; // Na-K pump current (uA/uF)
+  double INaK_; // Na-K pump maximal current (uA/uF)
+  double fNaK; // Na-K pump voltage dependence parameter
+  double sigma_NaK; // Na-K pump extracellular Na dependence factor
+  double KmNa_NaK; // Na-K pump half-saturation concentration of Na (mM)
+  double KmK_NaK; // Na-K pump half-saturation concentration of K (mM)
+
+  // Na-Ca exchanger
+  double INCX; // Na-Ca exchanger current (uA/uF)
+  double GNCX_; // Na-Ca exchanger scaling parameter, nominal value = 1.0
+  double kNCX; // Na-Ca exchanger scaling factor (uA/uF)
+  double ksat; // Na-Ca exchanger half-saturation concentration (mM)
+  double eta; // Position of energy barrier controlling voltage dependence
+
+  // Sarcolemmal Ca pump
+  double IpCa; // Sarcolemmal Ca pump current (uA/uF)
+  double IpCa_; // Sarcolemmal Ca pump maximal current (uA/uF)
+  double KmpCa; // Sarcolemmal Ca pump half-saturation concentration (mM)
+
+  // Summated ionic currents
+  double I_Inject; // Injected current (uA/uF)
+  double NaIon, KIon, CaIon; // Currents flow per ion (uA/uF)
+  double Iion; // Total membrane current (uA/uF)
 };
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Weill Medical College of Cornell University
+ * Copyright (C) 2017 Weill Medical College of Cornell University
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as
@@ -21,9 +21,9 @@
  * 2009 Livshitz Rudy Model of a ventricular guinea pig myocyte
  * Biophysical Journal, 2009
  *
- * LivRudy2009.cpp, v3.0
+ * LivRudy2009.cpp, v4.0
  *
- * Author: Francis Ortega (v1.0 - 3.0) (2011 - 2016)
+ * Author: Francis Ortega (v1.0 - 3.0) (2011 - 2017)
  *
  *** NOTES
  *
@@ -37,100 +37,88 @@
 #include "../include/LivRudy2009.hpp"
 
 LivRudy2009::LivRudy2009(void) { // Model initialization
-
-  // Model parameters
-  DT = 0.1;
+  DT = 0.1; // Model time-step (ms)
 
   reset(); // Set to initial conditions
 
-  // Constants
-  // Physical Constants
-  F = 96485; // Faraday's constant, C/mol
-  R = 8314; // gas constant, mJ/K
-  T = 273 + 37; // absolute temperature, K
-  RTF = R * T / F;
-  FRT = 1 / RTF;
-  pi = 4.0 * atan(1.0); // Pi
-  // Cell Geometry
-  length_cell = 0.01; // Length of the cell (cm)
-  radius = 0.0011; // Radius of the cell (cm)
-  Vcell = 1000 * pi * radius * radius *
-      length_cell; // 3.801e-5 uL Cell volume (uL)
-  Ageo = 2 * pi * radius * radius + 2 * pi * radius *
-      length_cell; // 7.671e-5 cm^2 Geometric membrane area (cm^2)
-  Acap = 2 * Ageo; // 1.534e-4 cm^2 Capacitive membrane area (cm^2)
-  Vmyo = Vcell * 0.68; // Myoplasm volume (uL)
-  Vmito = Vcell * 0.24; // Mitochondria volume (uL)
-  VNSR = Vcell * 0.0552; // NSR volume (uL)
-  VJSR = Vcell * 0.0048; // JSR volume (uL)
-  Vss = Vcell * 0.02;
-  // Cell Capacitance
-  Cm = 1.0;
-  // Fixed ionic concentrations
-  // Original concentrations
-  // Ko = 4.5 ; // mM
-  // Nao = 140 ; // mM
-  // Cao = 1.8 ; // mM
-  // Concentration used in dynamic clamp experiments
-  Ko = 5.4 ; // mM
-  Nao = 137; // mM
-  Cao = 2.0 ; // mM
+  // Model constants
+
+  // Static extracellular ionic concentrations
+  // Original Livshitz Rudy concentrations
+  // Ko = 4.5; // Extracellular K concentration (mM)
+  // Nao = 140.0; // mM
+  // Cao = 1.8; // mM
+  // Concentrations used in experiments
+  Ko = 5.4 ; // Extracellular K concentration (mM)
+  Nao = 137.0; // Extracellular Na concentration (mM)
+  Cao = 2.0; // Extracellular Ca concentration (mM)
+
+  // JSR constants
+  GJrel_ = 1.0; // Jrel scaling parameter, nominal value = 1.0
+  alpha_rel = 0.125; // JSR Ca release amplitude coefficient
+  Krel_inf = 1; // Half-saturation coefficient of steady-state JSR Ca release
+  Krel_tau = 0.0123; // Tau of the half-saturation coefficient
+  hrel = 9; // JSR Ca release hill coefficient
+  beta_tau = 4.75; // Maximal value of JSR Ca release time constant
+
+  // NSR constants
+  Jserca_ = 1.0; // Jserca scaling factor, nominal = 1.0
+  Vserca = 8.75e-3; // Maximal current through SERCA (mM/ms)
+  Kmserca = 9.0e-4; // Half-saturation concentration of SERCA (mM)
+  CaNSR_max = 15.0; // Maximal Ca concentration in NSR (mM)
+  Jtr_tau = 120; // Time constant of NSR Ca transfer to JSR (ms)
+
+  // Myoplasmic Ca buffering constants
+  TRPNtot = 70e-3; // Maximal Ca buffered in troponin (mM)
+  KmTRPN = 0.5e-3; // Equilibrium constant of buffering for troponin (mM)
+  CMDNtot = 50e-3; // Maximal Ca buffered in calmodulin (mM)
+  KmCMDN = 2.38e-3; // Equilibrium connstant of buffering for calmodulin (mM)
+
+  // JSR Ca buffering constants
+  CSQNtot = 10; // Maximal Ca buffered in calsequestrin (mM)
+  KmCSQN = 0.8; // Equilibrium connstant of buffering for calsequestrin (mM)
+
   // Na current constants
-  GNa_= 16; // mS/cm^2
-  GNab = 0.004;
-  //double GNaL_= 6.5e-3;
-  // Ca current constants
-  PCa = 5.4e-4; // cm/s
-  PCa_Na = 6.75e-7; // cm/s
-  PCa_K = 1.93e-7; // cm/s
-  PCab = 1.995084e-7; // cm/s
-  gamma_Cao = 0.341; // dimensionless
-  gamma_Cai = 1; // dimensionless
-  gamma_Nao = 0.75; // dimensionless
-  gamma_Nai = 0.75; // dimensionless
-  gamma_Ko = 0.75; // dimensionless
-  gamma_Ki = 0.75; // dimensionless
-  GCaL_ = 1.0;
-  //const double hLca = 1; // dimensionless, Hill coefficient
-  KmCa = 6e-4; // Half saturation constant, mM
-  // T-type & background currents
-  GCaT_ = 0.05;
-  GCab_ = 0.003016;
-  // K Currents
-  GK1_ = 0.75;
-  GKr_ = 0.02614;
-  GKs_ = 0.433;
-  pKNa = 0.01833; // relative permeability of IKs, Na to K
-  GKp_ = 5.52e-3;
-  INaK_ = 2.25; // Max. current through Na-K pump (uA/uF)
-  KmNa_NaK = 10; // Half-saturation concentration of NaK pump (mM)
-  KmK_NaK = 1.5; // Half-saturation concentration of NaK pump (mM)
-  ksat = 0.0001;
-  eta = 0.15;
-  alpha_rel = 0.125;
-  Krel_inf = 1;
-  hrel = 9;
-  beta_tau = 4.75;
-  Krel_tau = 0.0123;
-  // Pumps and Transporters
-  IpCa_ = 1.15; // Max. Ca current through sarcolemmal Ca pump (uA/uF)
-  KmpCa = 5e-4; // Half-saturation concentration of sarcolemmal Ca pump (mM)
-  GJrel_ = 1.0; // Jrel scaling factor
-  Jserca_ = 1.0; // Jserca scaling factor
-  Vserca = 8.75e-3; // mM/ms
-  Kmserca = 9.0e-4; // mM
-  CaNSR_max = 15.0;
-  tau_transfer = 120;
-  kNCX = 0.00025;
-  GNCX_ = 1.0; // Na-Ca exchanger scaling factor
-  // Buffers in cytosol
-  TRPNtot = 70e-3;
-  KmTRPN = 0.5e-3;
-  CMDNtot = 50e-3;
-  KmCMDN = 2.38e-3;
-  // Buffers in JSR
-  CSQNtot = 10;
-  KmCSQN = 0.8;
+  GNa_= 16; // Fast Na current conductance (mS/uF)
+  GNab = 0.004; // Background Na current conductance (mS/uF)
+
+  // K current constants
+  GK1_ = 0.75; // Time-independent K current conductance (mS/uF)
+  GKr_ = 0.02614; // Rapidly activating K current conductance (mS/uF)
+  GKs_ = 0.433; // Slowly activating K current conductance (mS/uF)
+  pKNa = 0.01833; // Slowly activating K current Na to K permeability ratio
+  GKp_ = 5.52e-3; // Plateau K current conductance (mS/uF)
+
+  // Ca current consants
+  // L-type Ca current
+  GCaL_ = 1.0; // L-type Ca current scaling factor, nominal = 1.0
+  PCa = 5.4e-4; // Ca membrane permeability (cm/s)
+  PCa_Na = 6.75e-7; // Na membrane permeability (cm/s)
+  PCa_K = 1.93e-7; // K membrane permeability (cm/s)
+  gamma_Cao = 0.341; // L-type Ca activity coefficient of extracellular Ca
+  gamma_Cai = 1; // L-type Ca activity coefficient of intracellular Ca
+  gamma_Nao = 0.75; // L-type Ca aActivity coefficient of extracellular Na
+  gamma_Nai = 0.75; // L-type Ca activity coefficient of intracellular Na
+  gamma_Ko = 0.75; // L-type Ca activity coefficient of extracellular K
+  gamma_Ki = 0.75; // L-type Ca activity coefficient of intracellular K
+  KmCa = 6e-4; // Ca-dependent inactivation gate half-saturation constant (mM)
+  // T-type & background current
+  GCaT_ = 0.05; // T-type Ca current conductance (mS/uF)
+  GCab_ = 0.003016; // Time independent background Ca conductance (mS/uF)
+
+  // Pumps and transporters
+  // Na-K pump
+  INaK_ = 2.25; // Na-K pump maximal current (uA/uF)
+  KmNa_NaK = 10; // Na-K pump half-saturation concentration of Na (mM)
+  KmK_NaK = 1.5; // Na-K pump half-saturation concentration of K (mM)
+  // Na-Ca exchanger
+  GNCX_ = 1.0; // Na-Ca exchanger scaling parameter, nominal value = 1.0
+  kNCX = 0.00025; // Na-Ca exchanger scaling factor (uA/uF)
+  ksat = 0.0001; // Na-Ca exchanger half-saturation concentration (mM)
+  eta = 0.15; // Position of energy barrier controlling voltage dependence
+  // Sarcolemmal Ca pump
+  IpCa_ = 1.15; // Sarcolemmal Ca pump maximal current (uA/uF)
+  KmpCa = 5e-4; // Sarcolemmal Ca pump half-saturation concentration (mM)
 }
 
 LivRudy2009::~LivRudy2009(void){
@@ -281,11 +269,11 @@ void LivRudy2009::solve(){
   Jrelinf = GJrel_ * alpha_rel * beta_tau * ICaL /
       (exp(hrel * log(Krel_inf / CaJSR)) + 1);
   tau_rel = beta_tau / (Krel_tau / CaJSR + 1);
-  dJreldt = - (Jrelinf + Jrel) / tau_rel;
+  dJrel = - (Jrelinf + Jrel) / tau_rel;
 
   Jserca = Jserca_ * Vserca * (Cai / (Cai + Kmserca) - CaNSR / CaNSR_max);
 
-  Jtr = (CaNSR - CaJSR) / tau_transfer;
+  Jtr = (CaNSR - CaJSR) / Jtr_tau;
 
   // Total Current
   NaIon = INa + INab + 3 * INCX + ICaL_Na + 3 * INaK;
@@ -293,6 +281,10 @@ void LivRudy2009::solve(){
   CaIon = ICaL + ICab + IpCa - 2 * INCX + ICaT;
   Iion = NaIon + KIon + CaIon;
 
+  // The units of dnai is in mM. Note that naiont should be multiplied by the
+// cell capacitance to get the correct units. Since cell capacitance = 1 uF/cm^2,
+// it doesn't explicitly appear in the equation below.
+// This holds true for the calculation of dki and dcai.
   // Derivatives for ionic concentration
   dNai = -NaIon * Acap / (Vmyo * F);
   // Injected current assumed to be due to potassium flux
@@ -312,7 +304,7 @@ void LivRudy2009::solve(){
   Cai_t += DT * dCai_t;
   CaJSR_t += DT * dCaJSR_t;
   CaNSR += DT * dCaNSR;
-  Jrel += DT * dJreldt;
+  Jrel += DT * dJrel;
 
   // Update gating variables - Euler Method
   h = (hinf - (hinf - h) * exp(-DT / tauh));
