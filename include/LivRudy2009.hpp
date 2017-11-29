@@ -352,8 +352,6 @@ class LivRudy2009 {
   double ICaNa_; // Na maximal current through L-type Ca channel (uA/uF)
   double GCaL_; // L-type Ca current scaling factor, nominal = 1.0
   double d; // L-type Ca current V-dependent activation gate
-  double dinf_0;
-  double dinf_1;
   double dinf; // L-type V-dependent activation gate steady-state value
   double taud; // L-type V-dependent activation gate time connstant (1/ms)
   double f; // L-type Ca current V-dependent inactivation gate
