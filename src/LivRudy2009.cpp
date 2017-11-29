@@ -127,7 +127,7 @@ LivRudy2009::~LivRudy2009(void){
 
 // Model Solver
 void LivRudy2009::solve(){
-  // Analytical computation of Ca buffering
+  // Calculate free Ca through rapid buffer approximation
   Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
   CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
 
@@ -189,8 +189,8 @@ void LivRudy2009::solve(){
     tauxKr = 85.830287334611480;
   else
     tauxKr = (1.0 / (0.00138 * (V + 14.2) /
-                      (1.0 - exp(-0.123 * (V + 14.2))) + 0.00061 *
-                      (V + 38.9) / (exp(0.145 *(V + 38.9)) -1.0)));
+                     (1.0 - exp(-0.123 * (V + 14.2))) + 0.00061 *
+                     (V + 38.9) / (exp(0.145 *(V + 38.9)) -1.0)));
   RKr = 1.0 / (exp((V + 9.0) / 22.4) + 1.0); // Inactivation gate
   IKr = GKr_ * sqrt(Ko / 5.4) * xKr * RKr * (V - EK);
 
@@ -202,7 +202,7 @@ void LivRudy2009::solve(){
     tauxs1 = 417.9441667499822;
   else
     tauxs1 = 10000.0 / (0.719 * (V + 30.0) / (1 - exp(-0.148 * (V + 30.0))) +
-                       1.31 * (V + 30.0) / (exp(0.0687 * (V + 30.0)) - 1.0));
+                        1.31 * (V + 30.0) / (exp(0.0687 * (V + 30.0)) - 1.0));
   tauxs2 = 4.0 * tauxs1; // Slow activation gate time constant (1/ms)
   // Activation steady-state value
   xsinf = 1.0 / (1.0 + exp(-(V - 1.5) / 16.7));
@@ -237,7 +237,7 @@ void LivRudy2009::solve(){
                     (0.0337 * (V + 10))) + 0.02);
   // Ca maximal current through L-type Ca channel (uA/uF)
   ICa_ = PCa * 4.0 * F * FRT * V * (gamma_Cai * Cai * exp(2.0 * V *FRT) -
-                                  gamma_Cao *Cao) / (exp(2.0 * V *FRT) - 1.0);
+                                    gamma_Cao *Cao) / (exp(2.0 * V *FRT) - 1.0);
   // K maximal current through L-type Ca channel (uA/uF)
   ICaK_ = PCa_K * F * FRT * V * (gamma_Ki *Ki * exp(V * FRT) -
                                  gamma_Ko * Ko) / (exp(V * FRT) - 1.0);
@@ -275,11 +275,11 @@ void LivRudy2009::solve(){
   // Na-K pump
   sigma_NaK = (exp(Nao / 67.3) - 1) / 7.0; // Extracellular Na dependence factor
   fNaK = 1.0/(1.0 + 0.1245 * exp(-0.1 * V * FRT) + 0.0365 * sigma_NaK *
-            exp(-V * FRT)); //Voltage dependence parameter
+              exp(-V * FRT)); //Voltage dependence parameter
   // Na-K pump current (uA/uF)
   INaK = INaK_ * fNaK * Ko / ((Ko + KmK_NaK) *
                               (1.0 + ((KmNa_NaK / Nai) *
-                                    (KmNa_NaK / Nai)))); // pow() removed
+                                      (KmNa_NaK / Nai)))); // pow() removed
 
   // Na-Ca exchanger
   INCX = GNCX_ * kNCX * exp((eta - 1.0) * V * FRT) *
@@ -293,7 +293,7 @@ void LivRudy2009::solve(){
 
   // Intracellular Ca fluxes
 
-  // JSR calcium compartment
+  // JSR Ca compartment
   // Steady-state value of JSR Ca release - Added GJrel_ as a scaling factor and
   // removed pow()
   Jrelinf = GJrel_ * alpha_rel * beta_tau * ICaL /
@@ -302,7 +302,7 @@ void LivRudy2009::solve(){
   // Change in JSR release to myoplasm (mM)
   dJrel = - (Jrelinf + Jrel) / tau_rel;
 
-  // NSR Calcium compartment
+  // NSR Ca compartment
   // Ca uptake from myoplasm to NSR due to SERCA (mM/ms)
   Jserca = Jserca_ * Vserca * (Cai / (Cai + Kmserca) - CaNSR / CaNSR_max);
   // NSR Ca transfer to JSR (mM/ms)
@@ -322,7 +322,7 @@ void LivRudy2009::solve(){
   dNai = -NaIon * Acap / (Vmyo * F);
   dKi = -KIon * Acap / (Vmyo * F);
   dCai_t = -Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
-               CaIon * Acap / (2 * Vmyo * F);
+      CaIon * Acap / (2 * Vmyo * F);
   dCaJSR_t = Jtr - Jrel;
   dCaNSR = Jserca - Jtr * VJSR / VNSR;
 
@@ -335,24 +335,34 @@ void LivRudy2009::solve(){
   Ki += DT * dKi; // Intracellular K concentration (mM)
   // Total buffered and free intracellular Ca concentration (mM)
   Cai_t += DT * dCai_t;
-  // Total buffered and free intracellular Ca concentration (mM)
+  // Total buffered and free JSR Ca concentration (mM)
   CaJSR_t += DT * dCaJSR_t;
   CaNSR += DT * dCaNSR;
   Jrel += DT * dJrel;
 
   // Update gating variables - Euler Method
+  // Fast Na channel gates
   h = (hinf - (hinf - h) * exp(-DT / tauh));
   j = (jinf - (jinf - j) * exp(-DT / tauj));
   m = (minf - (minf - m) * exp(-DT / taum));
-  d = (dinf - (dinf - d) * exp(-DT / taud));
-  f = (finf - (finf - f) * exp(-DT / tauf));
-  b = (binf - (binf - b) * exp(-DT / taub));
-  g = (ginf - (ginf - g) * exp(-DT / taug));
+  // Fast component of the delayed rectifier K channel gates
   xKr = (xKrinf - (xKrinf - xKr) * exp(-DT / tauxKr));
+  // Slow component of the delayed rectifier K channel gates
   xs1 = (xsinf - (xsinf - xs1) * exp(-DT / tauxs1));
   xs2 = (xsinf - (xsinf - xs2) * exp(-DT / tauxs2));
+  // L-type Ca channel gates
+  d = (dinf - (dinf - d) * exp(-DT / taud));
+  f = (finf - (finf - f) * exp(-DT / tauf));
+  // T-type Ca channel gates
+  b = (binf - (binf - b) * exp(-DT / taub));
+  g = (ginf - (ginf - g) * exp(-DT / taug));
 }
 
+// Fast buffer implementation
+// a - Maximal Ca buffered
+// b - Equilibrium constant of buffering
+// 1 - Buffer 1
+// 2 - Buffer 2
 double LivRudy2009::calcium_buffer(
     double ca_t, double a1, double b1, double a2, double b2) {
   alp2 = a1 + a2 + b1 + b2 - ca_t;

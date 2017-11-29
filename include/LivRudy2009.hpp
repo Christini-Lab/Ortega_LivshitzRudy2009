@@ -191,7 +191,7 @@ class LivRudy2009 {
  private:
   // Model solver
   void solve();
-  // Calcium buffering approximation
+  // Rapid Ca buffering approximation
   double calcium_buffer(double, double, double, double, double);
 
   double DT; // Model time-step (ms)
@@ -212,10 +212,10 @@ class LivRudy2009 {
   const double Ageo = 2 * pi * radius * radius + 2 * pi * radius *
       length_cell; // Geometric membrane area (cm^2)
   const double Acap = 2 * Ageo; // Capacitive membrane area (cm^2)
-  double Vmyo = Vcell * 0.68; // Myoplasm volume (uL)
-  double Vmito = Vcell * 0.24; // Mitochondria volume (uL)
-  double VNSR = Vcell * 0.0552;; // NSR volume (uL)
-  double VJSR = Vcell * 0.0048; // JSR volume (uL)
+  const double Vmyo = Vcell * 0.68; // Myoplasm volume (uL)
+  const double Vmito = Vcell * 0.24; // Mitochondria volume (uL)
+  const double VNSR = Vcell * 0.0552;; // NSR volume (uL)
+  const double VJSR = Vcell * 0.0048; // JSR volume (uL)
 
   // Cell Capacitance, implied 1 uF/cm^2
   // const double Cm = 1.0;
