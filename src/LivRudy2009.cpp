@@ -23,7 +23,7 @@
  *
  * LivRudy2009.cpp, v4.0
  *
- * Author: Francis Ortega (v1.0 - 3.0) (2011 - 2017)
+ * Author: Francis Ortega (v1.0 - 4.0) (2011 - 2017)
  *
  *** NOTES
  *
@@ -127,130 +127,156 @@ LivRudy2009::~LivRudy2009(void){
 
 // Model Solver
 void LivRudy2009::solve(){
-  // Buffering
+  // Analytical computation of Ca buffering
   Cai = calcium_buffer(Cai_t, TRPNtot, KmTRPN, CMDNtot, KmCMDN);
   CaJSR = calcium_buffer(CaJSR_t, CSQNtot, KmCSQN, 0, 0);
 
-  // Reversel Potentials
-  ENa = RTF * log(Nao / Nai);
-  EK = RTF * log(Ko / Ki);
-  EKs = RTF * log((Ko + pKNa * Nao)/(Ki + pKNa * Nai));
-  ECa = 0.5 * RTF * log(Cao / Cai);
+  // Reversal potentials
+  ENa = RTF * log(Nao / Nai); // Na reversal potential (mV)
+  EK = RTF * log(Ko / Ki); // K reversal potential (mV)
+  ECa = 0.5 * RTF * log(Cao / Cai); // Ca reversal potential (mV)
 
-  // Na currents
-  // H-gate
+  // Fast Na channel current
+  // Inactivation gate
+  // Auxiliary function to remove singularities
   lambda_na = 1.0 - 1.0 / (1.0 + exp(-(V + 40) / 0.024));
+  // Alpha-h rate constant (1/ms)
   ah = lambda_na * 0.135 * exp(-(80.0 + V) / 6.8);
+  // Beta-h rate constant (1/ms)
   bh = (1.0 - lambda_na) / (0.13 * (1.0 + exp((V + 10.66)/(-11.1)))) +
       lambda_na * (3.56 * exp(0.079 * V) + 3.1 * 1e5 * exp(0.35 * V));
-  hinf = ah / (ah + bh); // hinf
-  tauh = 1 / (ah + bh); // tauh
-  // J-gate
+  hinf = ah / (ah + bh); // Inactivation gate steady-state value
+  tauh = 1 / (ah + bh); // Inactivation gate time constant (1/ms)
+  // Slow inactivation gate
+  // Alpha-j rate constant (1/ms)
   aj =  lambda_na *
       (-1.2714e5 * exp(0.2444 * V) - 3.474e-5 * exp(-0.04391 * V)) *
       (V + 37.78) / (1 + exp(0.311 * (V + 79.23)));
+  // Beta-j rate constant (1/ms)
   bj = (1 - lambda_na) *
       (0.3 * exp(-2.535e-7 * V) / (1 + exp(-0.1 * (V + 32)))) + lambda_na *
       (0.1212 * exp(-0.01052 * V) / (1 + exp(-0.1378 * (V + 40.14))));
-  tauj = 1.0 / (aj + bj); // tauj
-  jinf = aj / (aj + bj); // jinf
-  // M-gate
+  tauj = 1.0 / (aj + bj); // Slow inactivation gate time constant (1/ms)
+  jinf = aj / (aj + bj); // Slow inactivation gate steady-state value
+  // Activation gate
+  // Fast Na current alpha-m rate constant (1/ms)
   if (V > -47.14 && V < -47.12) // if V = -47.13, divide by 0 error
-    am = 3.199985789461998;
+    am = 3.2;
   else
     am = 0.32 * (V + 47.13) / (1.0 - exp(-0.1 * (V + 47.13)));
-  bm = 0.08 * exp(-V / 11.0);
-  minf = am / (am + bm); // minf
-  taum = 1.0 / (am + bm); // taum
-  INa = GNa_ * m * m * m * h * j * (V - ENa);
-  INab = GNab * (V - ENa);
+  bm = 0.08 * exp(-V / 11.0); // Beta-m rate constant (1/ms)
+  minf = am / (am + bm); // Activation gate steady-state value
+  taum = 1.0 / (am + bm); // Activation gate time constant (1/ms)
+  INa = GNa_ * m * m * m * h * j * (V - ENa); // Fast Na current (uA/uF)
 
-  // L-type Ca current
-  // D-gate
-  dinf_0 = 1.0 / (1.0 + exp(-(V + 10) / 6.24));
-  dinf_1 = 1.0 / (1.0 + exp(-(V + 60) / 0.024));
-  dinf = dinf_0 * dinf_1; // dinf
-  if (V > -10.01 && V < -9.99)// if V = -10, divide by 0 error
-    taud = 2.289374849326888; // taud
-  else
-    taud =  1.0 / (1.0 + exp(-(V + 10) / 6.24)) *
-        (1 - exp(-(V + 10) / 6.24))/(0.035 * (V + 10)); // taud
-  // F-gate
-  finf = 1.0 / (1.0 + exp((V + 32) / 8.0)) +
-      (0.6) / (1.0 + exp((50 - V) / 20.0)); // finf
-  tauf = 1.0 /
-      (0.0197 * exp(-(0.0337 * (V + 10)) *
-                    (0.0337 * (V + 10))) + 0.02); // tauf
-  ICa_ = PCa * 4.0 * F * FRT * V * (gamma_Cai * Cai * exp(2.0 * V *FRT) -
-                                  gamma_Cao *Cao) / (exp(2.0 * V *FRT) - 1.0);
-  ICaK_ = PCa_K * F * FRT * V * (gamma_Ki *Ki * exp(V * FRT) -
-                                 gamma_Ko * Ko) / (exp(V * FRT) - 1.0);
-  ICaNa_ = PCa_Na * F * FRT * V * (gamma_Nai * Nai * exp(V * FRT) -
-                                   gamma_Nao * Nao) / (exp(V * FRT) - 1.0) ;
-  fCa = 1.0 / (Cai / KmCa + 1.0);
-  ICaL = GCaL_ * ICa_ * d * f * fCa;
-  ICaL_K = GCaL_ * ICaK_* d * f * fCa;
-  ICaL_Na = GCaL_ * ICaNa_ * d * f * fCa;
-
-  // Background calcium current
-  ICab = GCab_ * (V - ECa);
-
-  // Sarcolemmal calcium pump
-  IpCa = IpCa_ * Cai / (Cai + KmpCa);
-
-  // T-type Ca current
-  // B-gate
-  binf = 1.0 / (1.0 + exp(-(V + 14.0) / 10.8)); // binf
-  taub = (3.7 + 6.1 / (1 + exp((V + 25.0) / 4.5))); // taub
-
-  // G-gate
-  lambda_g = 1.0 - 1.0 / (1.0 + exp(-V / 0.0024));
-  ginf = 1.0 / (1.0 + exp((V + 60.0) / 5.6)); // ginf
-  taug = (lambda_g * (-0.875 * V + 12.0) + 12.0 *
-                 (1.0 - lambda_g)); // taug
-  ICaT = GCaT_ * b*b * g * (V - ECa);
+  // Time-independent background Na current
+  INab = GNab * (V - ENa); // Background Na current (uA/uF)
 
   // K currents
-  // Time independent K current
+
+  // Time-independent K current
+  // Steady-state value
   xK1 = 0.004 * (1.0 + exp(0.6987 * (V - EK + 11.724))) /
       (1.0 + exp(0.6168 * (V - EK + 4.872)));
+  // Time-independent K current (uA/uF)
   IK1 = GK1_ * sqrt(Ko / 5.4) * (V - EK) / (1.0 + xK1);
 
   // Fast component of the delayed rectifier K current
-  // IKr
-  xKrinf = 1.0 / (1.0 + exp(-(V + 21.5) / 7.5)); // xKrinf
+  // Activation gate steady-state value
+  xKrinf = 1.0 / (1.0 + exp(-(V + 21.5) / 7.5));
+  // Activation gate time constant (1/ms)
   if (V > -14.21 && V < -14.19) // if V = -14.2, divide by 0 error
-    tauxKr = 85.830287334611480; // tauxKr
+    tauxKr = 85.830287334611480;
   else
     tauxKr = (1.0 / (0.00138 * (V + 14.2) /
                       (1.0 - exp(-0.123 * (V + 14.2))) + 0.00061 *
-                      (V + 38.9) / (exp(0.145 *(V + 38.9)) -1.0))); // tauxKr
+                      (V + 38.9) / (exp(0.145 *(V + 38.9)) -1.0)));
+  RKr = 1.0 / (exp((V + 9.0) / 22.4) + 1.0); // Inactivation gate
+  IKr = GKr_ * sqrt(Ko / 5.4) * xKr * RKr * (V - EK);
+
+  // Slow component of the delayed rectifier K current
+  // Reversal potential (mV)
+  EKs = RTF * log((Ko + pKNa * Nao)/(Ki + pKNa * Nai));
+  // Fast activation gate time constant (1/ms)
   if (V > -30.01 && V < -29.99) // if V = -30, divide by 0 error
     tauxs1 = 417.9441667499822;
   else
     tauxs1 = 10000.0 / (0.719 * (V + 30.0) / (1 - exp(-0.148 * (V + 30.0))) +
                        1.31 * (V + 30.0) / (exp(0.0687 * (V + 30.0)) - 1.0));
-  tauxs2 = 4.0 * tauxs1; // tauxs2
-  xsinf = 1.0 / (1.0 + exp(-(V - 1.5) / 16.7)); // xsinf
-  RKr = 1.0 / (exp((V + 9.0) / 22.4) + 1.0);
-  IKr = GKr_ * sqrt(Ko / 5.4) * xKr * RKr * (V - EK);
-
-  // Fast component of the delayed rectifier K current
-  //IKs = GKs_ * (1 + 0.6/(pow(3.8e-5/Cai,1.4)+1)) * xs1 * xs2 * (V - EKs);
+  tauxs2 = 4.0 * tauxs1; // Slow activation gate time constant (1/ms)
+  // Activation steady-state value
+  xsinf = 1.0 / (1.0 + exp(-(V - 1.5) / 16.7));
+  // Slowly activating K current (uA/uF)
   IKs = GKs_ * (1.0 + 0.6 / (exp(1.4 * log(3.8e-5 / Cai)) + 1.0)) * xs1 *
       xs2 * (V - EKs); // pow() removed
 
   // Plateau K current
-  Kp = 1.0 / (1.0 + exp((7.488 - V) / 5.98));
-  IKp = GKp_ * Kp * (V - EK);
+  Kp = 1.0 / (1.0 + exp((7.488 - V) / 5.98)); // Plateau K current factor
+  IKp = GKp_ * Kp * (V - EK); // Plateau K current (uA/uF)
+
+  // Ca currents
+
+  // L-type Ca channel current
+  // V-dependent activation gate
+  // V-dependent activation gate steady-state value
+  dinf = (1.0 / (1.0 + exp(-(V + 10) / 6.24))) *
+      (1.0 / (1.0 + exp(-(V + 60) / 0.024)));
+  // V-dependent activation gate time connstant (1/ms)
+  if (V > -10.01 && V < -9.99) // if V = -10, divide by 0 error
+    taud = 2.289374849326888;
+  else
+    taud =  1.0 / (1.0 + exp(-(V + 10) / 6.24)) *
+        (1 - exp(-(V + 10) / 6.24))/(0.035 * (V + 10));
+  // V-dependent inactivation gate
+  // V-dependent inactivation gate steady-state value
+  finf = 1.0 / (1.0 + exp((V + 32) / 8.0)) +
+      (0.6) / (1.0 + exp((50 - V) / 20.0));
+  // V-dependent inactivation gate time constant (1/ms)
+  tauf = 1.0 /
+      (0.0197 * exp(-(0.0337 * (V + 10)) *
+                    (0.0337 * (V + 10))) + 0.02);
+  // Ca maximal current through L-type Ca channel (uA/uF)
+  ICa_ = PCa * 4.0 * F * FRT * V * (gamma_Cai * Cai * exp(2.0 * V *FRT) -
+                                  gamma_Cao *Cao) / (exp(2.0 * V *FRT) - 1.0);
+  // K maximal current through L-type Ca channel (uA/uF)
+  ICaK_ = PCa_K * F * FRT * V * (gamma_Ki *Ki * exp(V * FRT) -
+                                 gamma_Ko * Ko) / (exp(V * FRT) - 1.0);
+  // Na maximal current through L-type Ca channel (uA/uF)
+  ICaNa_ = PCa_Na * F * FRT * V * (gamma_Nai * Nai * exp(V * FRT) -
+                                   gamma_Nao * Nao) / (exp(V * FRT) - 1.0) ;
+  fCa = 1.0 / (Cai / KmCa + 1.0); // Ca-dependent inactivation gate
+  // Ca current through L-type Ca channel (uA/uF)
+  ICaL = GCaL_ * ICa_ * d * f * fCa;
+  // K current through L-type Ca channel (uA/uF)
+  ICaL_K = GCaL_ * ICaK_* d * f * fCa;
+  // Na current through L-type Ca channel (uA/uF)
+  ICaL_Na = GCaL_ * ICaNa_ * d * f * fCa;
+
+  // T-type Ca current
+  // Activation gate
+  // Activation gate steady-state value
+  binf = 1.0 / (1.0 + exp(-(V + 14.0) / 10.8));
+  // Activation gate time constant (1/ms)
+  taub = (3.7 + 6.1 / (1 + exp((V + 25.0) / 4.5)));
+  // Inactivation gate
+  // Auxiliary function to remove singularities
+  lambda_g = 1.0 - 1.0 / (1.0 + exp(-V / 0.0024));
+  // Inactivation gate steady-state value
+  ginf = 1.0 / (1.0 + exp((V + 60.0) / 5.6));
+  // Inactivation gate time constant (1/ms)
+  taug = (lambda_g * (-0.875 * V + 12.0) + 12.0 * (1.0 - lambda_g));
+  ICaT = GCaT_ * b*b * g * (V - ECa); // T-type Ca current (uA/uF)
+
+  // Time-independent background Ca current
+  ICab = GCab_ * (V - ECa); // Time-independent background Ca current (uA/uF)
 
   // Pumps and transporters
+
   // Na-K pump
-  sigma_NaK = (exp(Nao / 67.3) - 1) / 7.0;
+  sigma_NaK = (exp(Nao / 67.3) - 1) / 7.0; // Extracellular Na dependence factor
   fNaK = 1.0/(1.0 + 0.1245 * exp(-0.1 * V * FRT) + 0.0365 * sigma_NaK *
-            exp(-V * FRT));
-  //INaK = INaK_ * fNaK * Ko / ( (Ko + KmK_NaK) * pow( 1 +
-  //((KmNa_NaK/Nai)*(KmNa_NaK/Nai)),2) );
+            exp(-V * FRT)); //Voltage dependence parameter
+  // Na-K pump current (uA/uF)
   INaK = INaK_ * fNaK * Ko / ((Ko + KmK_NaK) *
                               (1.0 + ((KmNa_NaK / Nai) *
                                     (KmNa_NaK / Nai)))); // pow() removed
@@ -260,34 +286,40 @@ void LivRudy2009::solve(){
       ((Nai * Nai * Nai) * Cao * exp(V * FRT) - (Nao * Nao * Nao) * Cai) /
       ( 1.0 + ksat * exp((eta - 1.0) * V * FRT) *
         ((Nai * Nai * Nai) * Cao * exp(V * FRT) +
-         (Nao * Nao * Nao) * Cai));
+         (Nao * Nao * Nao) * Cai)); // Na-Ca exchanger current (uA/uF)
+
+  // Sarcolemmal calcium pump
+  IpCa = IpCa_ * Cai / (Cai + KmpCa); // Sarcolemmal Ca pump current (uA/uF)
 
   // Intracellular Ca fluxes
-  // SR Ca release, uptake, and leak
-  //Jrelinf = alpha_rel * beta_tau * ICaL / (pow((Krel_inf/CaJSR),hrel) + 1);
-  // Added GJrel_ as a scaling factor
+
+  // JSR calcium compartment
+  // Steady-state value of JSR Ca release - Added GJrel_ as a scaling factor and
+  // removed pow()
   Jrelinf = GJrel_ * alpha_rel * beta_tau * ICaL /
       (exp(hrel * log(Krel_inf / CaJSR)) + 1);
-  tau_rel = beta_tau / (Krel_tau / CaJSR + 1);
+  tau_rel = beta_tau / (Krel_tau / CaJSR + 1); // JSR Ca release time constant
+  // Change in JSR release to myoplasm (mM)
   dJrel = - (Jrelinf + Jrel) / tau_rel;
 
+  // NSR Calcium compartment
+  // Ca uptake from myoplasm to NSR due to SERCA (mM/ms)
   Jserca = Jserca_ * Vserca * (Cai / (Cai + Kmserca) - CaNSR / CaNSR_max);
-
+  // NSR Ca transfer to JSR (mM/ms)
   Jtr = (CaNSR - CaJSR) / Jtr_tau;
 
-  // Total Current
+  // Summated ionic currents
   NaIon = INa + INab + 3 * INCX + ICaL_Na + 3 * INaK;
+  // Injected current assumed to be due to potassium flux
   KIon = I_Inject + IKr + IKs + IK1 + IKp + ICaL_K - 2 * INaK;
   CaIon = ICaL + ICab + IpCa - 2 * INCX + ICaT;
   Iion = NaIon + KIon + CaIon;
 
-  // The units of dnai is in mM. Note that naiont should be multiplied by the
-// cell capacitance to get the correct units. Since cell capacitance = 1 uF/cm^2,
-// it doesn't explicitly appear in the equation below.
-// This holds true for the calculation of dki and dcai.
+  // Units are in mM. Note that summated currents must be multipled by cell
+  // capacitance to get the correct units. Since cell capacitance = 1 uF/cm^2,
+  // it doesn't explicitly appear in the equation below.
   // Derivatives for ionic concentration
   dNai = -NaIon * Acap / (Vmyo * F);
-  // Injected current assumed to be due to potassium flux
   dKi = -KIon * Acap / (Vmyo * F);
   dCai_t = -Jserca * VNSR / Vmyo + Jrel * VJSR / Vmyo -
                CaIon * Acap / (2 * Vmyo * F);
@@ -298,10 +330,12 @@ void LivRudy2009::solve(){
   dVdt = -(Iion);
 
   // Update voltage and ionic concentrations
-  V += DT * dVdt;
-  Nai += DT * dNai;
-  Ki += DT * dKi;
+  V += DT * dVdt; // Membrane voltage (mV)
+  Nai += DT * dNai; // Intracellular Na concentration (mM)
+  Ki += DT * dKi; // Intracellular K concentration (mM)
+  // Total buffered and free intracellular Ca concentration (mM)
   Cai_t += DT * dCai_t;
+  // Total buffered and free intracellular Ca concentration (mM)
   CaJSR_t += DT * dCaJSR_t;
   CaNSR += DT * dCaNSR;
   Jrel += DT * dJrel;

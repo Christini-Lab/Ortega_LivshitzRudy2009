@@ -31,7 +31,8 @@
  * on Livshitz 2009 paper, which was used on Devenyi and Ortega 2016 dynamic
  * clamp paper. More recently, the model has been revised to more closely match
  * original MATLAB model from Livshitz and Rudy. Optimizations and modifications
- * have been split off into different git branches.
+ * have been split off into different git branches. Extensive commenting has
+ * been added that is missing from the original.
  *
  * v1.0 - Initial version
  * v1.1 - Added rate changer
@@ -231,13 +232,11 @@ class LivRudy2009 {
   // Myoplasmic ionic concentrations
   double Nai; // Intracellular Na concentration (mM)
   double Ki; // Intracellular K concentration (mM)
-  // Buffered calcium concentrations
-  double Cai; // Intracelluar Ca concentration (mM)
+  double Cai_t; // Total buffered and free intracellular Ca concentration (mM)
+  double Cai; // Buffered myoplasmic Ca concentration (mM)
   double CaNSR; // NSR Ca concentation (mM)
-  double CaJSR; // JSR Ca concentration (mM)
-  // Total calcium concentrations (buffered and unbuffered)
-  double Cai_t; // Total intracellular Ca concentration (mM)
-  double CaJSR_t; // Total JSR Ca concentration (mM)
+  double CaJSR; // Buffered JSR Ca concentration (mM)
+  double CaJSR_t; // Total JSR buffered and free Ca concentration (mM)
 
   // Myoplasmic ionic concentration changes
   double dNai; // Change in intracellular Na (mM)
@@ -309,7 +308,7 @@ class LivRudy2009 {
   double INab; // Background Na current (uA/uF)
   double GNab; // Background Na conductance (mS/uF)
 
-  // K currentsa
+  // K currents
   double EK; // K reversal potential (mV)
 
   // Time-independent K current
@@ -379,8 +378,8 @@ class LivRudy2009 {
   double binf; // T-type Ca current activation gate steady-state value
   double taub; // T-type Ca current activation gate time constant (1/ms)
   double g; // T-type Ca current inactivation gate
-  double ginf; // T-type Ca current activation gate steady-state value
-  double taug; // T-type Ca current activation gate time constant (1/ms)
+  double ginf; // T-type Ca current inactivation gate steady-state value
+  double taug; // T-type Ca current inactivation gate time constant (1/ms)
   double lambda_g; // Auxiliary function to remove singularities
 
   // Time-independent background Ca current
