@@ -49,17 +49,18 @@ int main() {
   std::cout << "Starting simulation" << std::endl;
   double voltage;
   double stim = 0;
-  double dataDt = 0.1; // Dt of data output
-  double dataTime = 0;
-  double dt = 0.01; // Dt of model integration
-  model.setDt(dt);
-  int steps = std::round(dataDt / dt);
   int bcl = 500; // ms
   int beats = 50;
   int beatIdx = 0;
   int stimAmp = 40; // pA/pF
   int stimLength = 1; // ms
+  double dataDt = 0.1; // Dt of data output
+  double dataTime = 0;
+  double dt = 0.01; // Dt of model integration
+  model.setDt(dt);
 
+  // Number of integrations each data time step
+  int steps = std::round(dataDt / dt);
   int protocolLength = std::round(beats * bcl / dataDt);
   std::vector< std::vector<double> >
       data(6, std::vector<double>(protocolLength));

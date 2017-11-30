@@ -62,17 +62,24 @@ int main() {
   // model.setGserca(model.getGserca() * 2.14);
 
   std::cout << "Starting simulation" << std::endl;
-  double voltage;
+  // Simulation parameters
   double stim = 0;
+  int bcl = 500; // ms
+  int beats = 120 * 15; // 15 minutes
+  int beatIdx = 0;
+  int stimAmp = 40; // pA/pF
+  int stimLength = 1; // ms
   double dataDt = 0.2; // Dt of data output
   double dataTime = 0;
   double maxDt = 0.1; // Adaptive timestep maximum dt - 10 kHz
   double minDt = 0.001; // Adaptive timestep minimum dt - 1000 kHz
   double dt = maxDt; // Dt changes each time step, initially set to max
   model.setDt(dt); // Set model dt
+  int steps = dataDt / dt;
 
   // Changes in voltage and intracellular concentrations determine adaptive
   // changes in dt
+  double voltage;
   double dVdt;
   double dCaidt;
   double dNaidt;
@@ -87,21 +94,12 @@ int main() {
   double nai0 = model.getNai(); // Previous timestep intracellular sodium
   double ki0 = model.getKi(); // Previous timestep intracellular potassium
 
-  int steps = dataDt / dt;
-  int bcl = 500; // ms
-  int beats = 120 * 15; // 15 minutes
-  int beatIdx = 0;
-  int stimAmp = 40; // pA/pF
-  int stimLength = 1; // ms
-
   int protocolLength = beats * bcl / dataDt;
-
 
   // Time, voltage, current, and intracellular concentrations for last 5 beats
   std::vector< std::vector<double> >
       data(6, std::vector<double>(5 * bcl / dataDt));
   int offset = protocolLength - data.at(0).size();
-
 
   // Diastolic voltage and intracellular concentrations per beat
   std::vector< std::vector<double> > dia_data(5, std::vector<double>(beats));
