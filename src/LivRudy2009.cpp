@@ -119,11 +119,144 @@ LivRudy2009::LivRudy2009(void) { // Model initialization
   // Sarcolemmal Ca pump
   IpCa_ = 1.15; // Sarcolemmal Ca pump maximal current (uA/uF)
   KmpCa = 5e-4; // Sarcolemmal Ca pump half-saturation concentration (mM)
+
+  // Lookup table optimization for solely voltage-dependent variables
+  V_min = -200; // Voltage starts at this value, ends at opposite value
+  V_step = 0.01; // Voltage step that determines resolution of table
+  int lookup_length = V_min * -2 / V_step; // Number of voltage values
+  int lookup_width = 21; // Number of gating variables
+  // Resize 2D lookup table
+  lkupTable.resize(lookup_width);
+  for (int i = 0; i < lookup_width; i++) {
+    lkupTable.at(i).resize(lookup_length);
+  }
+  // Initialize lookup table with gating variables for each voltage
+  for (int i = 0; i < lookup_length; i++) {
+    double V = V_min + V_step * i;
+
+    lkupTable.at(0).at(i) = V; // Voltage (mV)
+
+    // Fast Na channel current
+    // Inactivation gate
+    // Auxiliary function to remove singularities
+    lambda_na = 1.0 - 1.0 / (1.0 + exp(-(V + 40) / 0.024));
+    // Alpha-h rate constant (1/ms)
+    ah = lambda_na * 0.135 * exp(-(80.0 + V) / 6.8);
+    // Beta-h rate constant (1/ms)
+    bh = (1.0 - lambda_na) / (0.13 * (1.0 + exp((V + 10.66)/(-11.1)))) +
+        lambda_na * (3.56 * exp(0.079 * V) + 3.1 * 1e5 * exp(0.35 * V));
+    lkupTable.at(1).at(i) =
+        ah / (ah + bh); // hinf, Inactivation gate steady-state value
+    lkupTable.at(2).at(i) =
+        1 / (ah + bh); // tauh, Inactivation gate time constant
+    // Slow inactivation gate
+    // Alpha-j rate constant (1/ms)
+    aj =  lambda_na *
+        (-1.2714e5 * exp(0.2444 * V) - 3.474e-5 * exp(-0.04391 * V)) *
+        (V + 37.78) / (1 + exp(0.311 * (V + 79.23)));
+    // Beta-j rate constant (1/ms)
+    bj = (1 - lambda_na) *
+        (0.3 * exp(-2.535e-7 * V) / (1 + exp(-0.1 * (V + 32)))) + lambda_na *
+        (0.1212 * exp(-0.01052 * V) / (1 + exp(-0.1378 * (V + 40.14))));
+    lkupTable.at(3).at(i) =
+        aj / (aj + bj); // jinf, Slow inactivation gate steady-state
+    lkupTable.at(4).at(i) =
+        1.0 / (aj + bj); // tauj, Slow inactivation gate time constant
+    // Activation gate
+    // Fast Na current alpha-m rate constant (1/ms)
+    if (V > -47.14 && V < -47.12) // if V = -47.13, divide by 0 error
+      am = 3.2;
+    else
+      am = 0.32 * (V + 47.13) / (1.0 - exp(-0.1 * (V + 47.13)));
+    bm = 0.08 * exp(-V / 11.0); // Beta-m rate constant (1/ms)
+    lkupTable.at(5).at(i) =
+        am / (am + bm); // minf, Activation gate steady-state value
+    lkupTable.at(6).at(i) =
+        1.0 / (am + bm); // taum, Activation gate time constant (1/ms)
+
+    // Fast component of the delayed rectifier K current
+    // xKrinf, Activation gate steady-state value
+    lkupTable.at(7).at(i) = 1.0 / (1.0 + exp(-(V + 21.5) / 7.5));
+    // tauxKr, Activation gate time constant (1/ms)
+    if (V > -14.21 && V < -14.19) // if V = -14.2, divide by 0 error
+      lkupTable.at(8).at(i) = 85.830287334611480;
+    else
+      lkupTable.at(8).at(i) = (1.0 / (0.00138 * (V + 14.2) /
+                       (1.0 - exp(-0.123 * (V + 14.2))) + 0.00061 *
+                       (V + 38.9) / (exp(0.145 *(V + 38.9)) -1.0)));
+    lkupTable.at(9).at(i) =
+        1.0 / (exp((V + 9.0) / 22.4) + 1.0); // RKr, Inactivation gate
+    // Fast activation gate time constant (1/ms)
+
+    // Slow component of the delayed rectifier K current
+    // tauxs1, Fast activation gate time constant (1/ms)
+    if (V > -30.01 && V < -29.99) // if V = -30, divide by 0 error
+      lkupTable.at(10).at(i) = 417.9441667499822;
+    else
+      lkupTable.at(10).at(i) = 10000.0 /
+          (0.719 * (V + 30.0) / (1 - exp(-0.148 * (V + 30.0))) +
+           1.31 * (V + 30.0) / (exp(0.0687 * (V + 30.0)) - 1.0));
+    // xsinf, Activation steady-state value
+    lkupTable.at(11).at(i) = 1.0 / (1.0 + exp(-(V - 1.5) / 16.7));
+
+    // Kp, Plateau K current
+    lkupTable.at(12).at(i) =
+        1.0 / (1.0 + exp((7.488 - V) / 5.98)); // Plateau K current factor
+
+    // L-type Ca channel current
+    // V-dependent activation gate
+    // dinf, V-dependent activation gate steady-state value
+    lkupTable.at(13).at(i) = (1.0 / (1.0 + exp(-(V + 10) / 6.24))) *
+        (1.0 / (1.0 + exp(-(V + 60) / 0.024)));
+    // taud, V-dependent activation gate time connstant (1/ms)
+    if (V > -10.01 && V < -9.99) // if V = -10, divide by 0 error
+      lkupTable.at(14).at(i) = 2.289374849326888;
+    else
+      lkupTable.at(14).at(i) =  1.0 / (1.0 + exp(-(V + 10) / 6.24)) *
+          (1 - exp(-(V + 10) / 6.24))/(0.035 * (V + 10));
+    // V-dependent inactivation gate
+    // finf, V-dependent inactivation gate steady-state value
+    lkupTable.at(15).at(i) = 1.0 / (1.0 + exp((V + 32) / 8.0)) +
+        (0.6) / (1.0 + exp((50 - V) / 20.0));
+    // tauf, V-dependent inactivation gate time constant (1/ms)
+    lkupTable.at(16).at(i) = 1.0 /
+        (0.0197 * exp(-(0.0337 * (V + 10)) *
+                      (0.0337 * (V + 10))) + 0.02);
+
+    // T-type Ca current
+    // Activation gate
+    // binf, Activation gate steady-state value
+    lkupTable.at(17).at(i) = 1.0 / (1.0 + exp(-(V + 14.0) / 10.8));
+    // taub, Activation gate time constant (1/ms)
+    lkupTable.at(18).at(i) = (3.7 + 6.1 / (1 + exp((V + 25.0) / 4.5)));
+    // Inactivation gate
+    // Auxiliary function to remove singularities
+    lambda_g = 1.0 - 1.0 / (1.0 + exp(-V / 0.0024));
+    // ginf, Inactivation gate steady-state value
+    lkupTable.at(19).at(i) = 1.0 / (1.0 + exp((V + 60.0) / 5.6));
+    // taug, Inactivation gate time constant (1/ms)
+    lkupTable.at(20).at(i) =
+        (lambda_g * (-0.875 * V + 12.0) + 12.0 * (1.0 - lambda_g));
+  }
 }
 
 LivRudy2009::~LivRudy2009(void){
 }
 
+// Function to retrieve precalculated value from lookup table
+double LivRudy2009::lookup(params parameter) {
+  V_idx = std::abs((V - V_min) / V_step);
+  V_next = -(-V + lkupTable.at(0).at(V_idx + 1)) / V_step;
+
+  return
+      // Difference between closest voltage values
+      (lkupTable.at((int) parameter).at(V_idx + 1) -
+       lkupTable.at((int) parameter).at(V_idx)) *
+      // Percent difference away from high voltage value
+      V_next +
+      // High voltage value
+      lkupTable.at((int) parameter).at(V_idx + 1);
+}
 
 // Model Solver
 void LivRudy2009::solve(){
@@ -138,35 +271,14 @@ void LivRudy2009::solve(){
 
   // Fast Na channel current
   // Inactivation gate
-  // Auxiliary function to remove singularities
-  lambda_na = 1.0 - 1.0 / (1.0 + exp(-(V + 40) / 0.024));
-  // Alpha-h rate constant (1/ms)
-  ah = lambda_na * 0.135 * exp(-(80.0 + V) / 6.8);
-  // Beta-h rate constant (1/ms)
-  bh = (1.0 - lambda_na) / (0.13 * (1.0 + exp((V + 10.66)/(-11.1)))) +
-      lambda_na * (3.56 * exp(0.079 * V) + 3.1 * 1e5 * exp(0.35 * V));
-  hinf = ah / (ah + bh); // Inactivation gate steady-state value
-  tauh = 1 / (ah + bh); // Inactivation gate time constant (1/ms)
+  hinf = lookup(params::HINF); // Inactivation gate steady-state value
+  tauh = lookup(params::TAUH); // Inactivation gate time constant (1/ms)
   // Slow inactivation gate
-  // Alpha-j rate constant (1/ms)
-  aj =  lambda_na *
-      (-1.2714e5 * exp(0.2444 * V) - 3.474e-5 * exp(-0.04391 * V)) *
-      (V + 37.78) / (1 + exp(0.311 * (V + 79.23)));
-  // Beta-j rate constant (1/ms)
-  bj = (1 - lambda_na) *
-      (0.3 * exp(-2.535e-7 * V) / (1 + exp(-0.1 * (V + 32)))) + lambda_na *
-      (0.1212 * exp(-0.01052 * V) / (1 + exp(-0.1378 * (V + 40.14))));
-  tauj = 1.0 / (aj + bj); // Slow inactivation gate time constant (1/ms)
-  jinf = aj / (aj + bj); // Slow inactivation gate steady-state value
+  tauj = lookup(params::TAUJ); // Slow inactivation gate time constant (1/ms)
+  jinf = lookup(params::JINF); // Slow inactivation gate steady-state value
   // Activation gate
-  // Fast Na current alpha-m rate constant (1/ms)
-  if (V > -47.14 && V < -47.12) // if V = -47.13, divide by 0 error
-    am = 3.2;
-  else
-    am = 0.32 * (V + 47.13) / (1.0 - exp(-0.1 * (V + 47.13)));
-  bm = 0.08 * exp(-V / 11.0); // Beta-m rate constant (1/ms)
-  minf = am / (am + bm); // Activation gate steady-state value
-  taum = 1.0 / (am + bm); // Activation gate time constant (1/ms)
+  minf = lookup(params::MINF); // Activation gate steady-state value
+  taum = lookup(params::TAUM); // Activation gate time constant (1/ms)
   INa = GNa_ * m * m * m * h * j * (V - ENa); // Fast Na current (uA/uF)
 
   // Time-independent background Na current
@@ -182,36 +294,25 @@ void LivRudy2009::solve(){
   IK1 = GK1_ * sqrt(Ko / 5.4) * (V - EK) / (1.0 + xK1);
 
   // Fast component of the delayed rectifier K current
-  // Activation gate steady-state value
-  xKrinf = 1.0 / (1.0 + exp(-(V + 21.5) / 7.5));
-  // Activation gate time constant (1/ms)
-  if (V > -14.21 && V < -14.19) // if V = -14.2, divide by 0 error
-    tauxKr = 85.830287334611480;
-  else
-    tauxKr = (1.0 / (0.00138 * (V + 14.2) /
-                     (1.0 - exp(-0.123 * (V + 14.2))) + 0.00061 *
-                     (V + 38.9) / (exp(0.145 *(V + 38.9)) -1.0)));
-  RKr = 1.0 / (exp((V + 9.0) / 22.4) + 1.0); // Inactivation gate
+  xKrinf = lookup(params::XKRINF); // Activation gate steady-state value
+  tauxKr = lookup(params::TAUXKR); // Activation gate time constant (1/ms)
+  RKr = lookup(params::RKR); // Inactivation gate
   IKr = GKr_ * sqrt(Ko / 5.4) * xKr * RKr * (V - EK);
 
   // Slow component of the delayed rectifier K current
   // Reversal potential (mV)
   EKs = RTF * log((Ko + pKNa * Nao)/(Ki + pKNa * Nai));
   // Fast activation gate time constant (1/ms)
-  if (V > -30.01 && V < -29.99) // if V = -30, divide by 0 error
-    tauxs1 = 417.9441667499822;
-  else
-    tauxs1 = 10000.0 / (0.719 * (V + 30.0) / (1 - exp(-0.148 * (V + 30.0))) +
-                        1.31 * (V + 30.0) / (exp(0.0687 * (V + 30.0)) - 1.0));
+  tauxs1 = lookup(params::TAUXS);
   tauxs2 = 4.0 * tauxs1; // Slow activation gate time constant (1/ms)
   // Activation steady-state value
-  xsinf = 1.0 / (1.0 + exp(-(V - 1.5) / 16.7));
+  xsinf = lookup(params::XSINF);
   // Slowly activating K current (uA/uF)
   IKs = GKs_ * (1.0 + 0.6 / (exp(1.4 * log(3.8e-5 / Cai)) + 1.0)) * xs1 *
       xs2 * (V - EKs); // pow() removed
 
   // Plateau K current
-  Kp = 1.0 / (1.0 + exp((7.488 - V) / 5.98)); // Plateau K current factor
+  Kp = lookup(params::KP); // Plateau K current factor
   IKp = GKp_ * Kp * (V - EK); // Plateau K current (uA/uF)
 
   // Ca currents
@@ -219,22 +320,14 @@ void LivRudy2009::solve(){
   // L-type Ca channel current
   // V-dependent activation gate
   // V-dependent activation gate steady-state value
-  dinf = (1.0 / (1.0 + exp(-(V + 10) / 6.24))) *
-      (1.0 / (1.0 + exp(-(V + 60) / 0.024)));
+  dinf = lookup(params::DINF);
   // V-dependent activation gate time connstant (1/ms)
-  if (V > -10.01 && V < -9.99) // if V = -10, divide by 0 error
-    taud = 2.289374849326888;
-  else
-    taud =  1.0 / (1.0 + exp(-(V + 10) / 6.24)) *
-        (1 - exp(-(V + 10) / 6.24))/(0.035 * (V + 10));
+  taud = lookup(params::TAUD);
   // V-dependent inactivation gate
   // V-dependent inactivation gate steady-state value
-  finf = 1.0 / (1.0 + exp((V + 32) / 8.0)) +
-      (0.6) / (1.0 + exp((50 - V) / 20.0));
+  finf = lookup(params::FINF);
   // V-dependent inactivation gate time constant (1/ms)
-  tauf = 1.0 /
-      (0.0197 * exp(-(0.0337 * (V + 10)) *
-                    (0.0337 * (V + 10))) + 0.02);
+  tauf = lookup(params::TAUF);
   // Ca maximal current through L-type Ca channel (uA/uF)
   ICa_ = PCa * 4.0 * F * FRT * V * (gamma_Cai * Cai * exp(2.0 * V *FRT) -
                                     gamma_Cao *Cao) / (exp(2.0 * V *FRT) - 1.0);
@@ -255,16 +348,14 @@ void LivRudy2009::solve(){
   // T-type Ca current
   // Activation gate
   // Activation gate steady-state value
-  binf = 1.0 / (1.0 + exp(-(V + 14.0) / 10.8));
+  binf = lookup(params::BINF);
   // Activation gate time constant (1/ms)
-  taub = (3.7 + 6.1 / (1 + exp((V + 25.0) / 4.5)));
+  taub = lookup(params::TAUB);
   // Inactivation gate
-  // Auxiliary function to remove singularities
-  lambda_g = 1.0 - 1.0 / (1.0 + exp(-V / 0.0024));
   // Inactivation gate steady-state value
-  ginf = 1.0 / (1.0 + exp((V + 60.0) / 5.6));
+  ginf = lookup(params::GINF);
   // Inactivation gate time constant (1/ms)
-  taug = (lambda_g * (-0.875 * V + 12.0) + 12.0 * (1.0 - lambda_g));
+  taug = lookup(params::TAUG);
   ICaT = GCaT_ * b*b * g * (V - ECa); // T-type Ca current (uA/uF)
 
   // Time-independent background Ca current

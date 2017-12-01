@@ -188,11 +188,38 @@ class LivRudy2009 {
   double getCaJSR_t() { return CaJSR; };
   double getCaNSR() { return CaNSR; };
 
+  // Lookup table parameter enumeration
+  enum params {
+    VOLTAGE,
+    HINF,
+    TAUH,
+    JINF,
+    TAUJ,
+    MINF,
+    TAUM,
+    XKRINF,
+    TAUXKR,
+    RKR,
+    TAUXS,
+    XSINF,
+    KP,
+    DINF,
+    TAUD,
+    FINF,
+    TAUF,
+    BINF,
+    TAUB,
+    GINF,
+    TAUG
+  };
+
  private:
   // Model solver
   void solve();
   // Rapid Ca buffering approximation
   double calcium_buffer(double, double, double, double, double);
+  // Lookup table retrieval function
+  double lookup(params);
 
   double DT; // Model time-step (ms)
 
@@ -410,6 +437,13 @@ class LivRudy2009 {
   double I_Inject; // Injected current (uA/uF)
   double NaIon, KIon, CaIon; // Currents flow per ion (uA/uF)
   double Iion; // Total membrane current (uA/uF)
+
+  // Lookup table optimization for solely voltage-dependent variables
+  std::vector< std::vector<double> > lkupTable;
+  double V_min; // Voltage starts at this value, ends at opposite value
+  double V_step; // Voltage step that determines resolution of table
+  int V_idx; // Index of the closest voltage to lookup voltage, rounded down
+  double V_next; // Percent difference away from next voltage value
 };
 
 #endif
