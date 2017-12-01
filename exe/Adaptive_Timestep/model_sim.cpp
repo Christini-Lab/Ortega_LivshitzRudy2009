@@ -65,7 +65,7 @@ int main() {
   // Simulation parameters
   double stim = 0;
   int bcl = 500; // ms
-  int beats = 120 * 15; // 15 minutes
+  int beats = 120 * 30; // 15 minutes
   int beatIdx = 0;
   int stimAmp = 40; // pA/pF
   int stimLength = 1; // ms

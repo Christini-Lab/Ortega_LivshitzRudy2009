@@ -36,7 +36,7 @@
 
 #include "../include/LivRudy2009.hpp"
 
-#define TOTALINTRA 151.7892
+#define TOTALINTRA 162.4472
 
 LivRudy2009::LivRudy2009(void) { // Model initialization
   DT = 0.1; // Model time-step (ms)
@@ -426,7 +426,7 @@ void LivRudy2009::solve(){
   V += DT * dVdt; // Membrane voltage (mV)
   Nai += DT * dNai; // Intracellular Na concentration (mM)
   // Ki += DT * dKi; // Intracellular K concentration (mM)
-  Ki = TOTALINTRA - Cai - Nai;
+  Ki = TOTALINTRA - Cai_t - CaJSR_t - CaNSR - Nai;
   // Total buffered and free intracellular Ca concentration (mM)
   Cai_t += DT * dCai_t;
   // Total buffered and free JSR Ca concentration (mM)
@@ -533,7 +533,7 @@ void LivRudy2009::reset(){ // Reset to initial conditions
   CaNSR = 2.44962;
   CaJSR_t = 8.17769;
   Nai = 13.919;
-  Ki = TOTALINTRA - Cai - Nai;
+  Ki = TOTALINTRA - Cai_t - CaJSR_t - CaNSR - Nai;
   m = 0.0016256;
   h = 0.983832;
   j = 0.989807;
