@@ -192,6 +192,7 @@ void LivRudy2009::solve(){
                      (1.0 - exp(-0.123 * (V + 14.2))) + 0.00061 *
                      (V + 38.9) / (exp(0.145 *(V + 38.9)) -1.0)));
   RKr = 1.0 / (exp((V + 9.0) / 22.4) + 1.0); // Inactivation gate
+  // Rapidly activating K current (uA/uF)
   IKr = GKr_ * sqrt(Ko / 5.4) * xKr * RKr * (V - EK);
 
   // Slow component of the delayed rectifier K current
