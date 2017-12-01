@@ -47,19 +47,19 @@ int main() {
   LivRudy2009 model;
 
   // Devenyi & Ortega 2016 GPig modifications
-  // model.setGNa(model.getGNa() * 0.967);
-  // model.setGNab(model.getGNab() * 1.99);
-  // model.setGCaL(model.getGCaL() * 0.525);
-  // model.setGCaT(model.getGCaT() * 0.322);
-  // model.setGCab(model.getGCab() * 1.559);
-  // model.setGK1(model.getGK1() * 1.073);
-  // model.setGKr(model.getGKr() * 1.782);
-  // model.setGKs(model.getGKs() * 0.042);
-  // model.setGKp(model.getGKp() * 0.059);
-  // model.setGNaK(model.getGNaK() * 1.645);
-  // model.setGNCX(model.getGNCX() * 1.096);
-  // model.setGpCa(model.getGpCa() * 0.270);
-  // model.setGserca(model.getGserca() * 2.14);
+  model.setGNa(model.getGNa() * 0.967);
+  model.setGNab(model.getGNab() * 1.99);
+  model.setGCaL(model.getGCaL() * 0.525);
+  model.setGCaT(model.getGCaT() * 0.322);
+  model.setGCab(model.getGCab() * 1.559);
+  model.setGK1(model.getGK1() * 1.073);
+  model.setGKr(model.getGKr() * 1.782);
+  model.setGKs(model.getGKs() * 0.042);
+  model.setGKp(model.getGKp() * 0.059);
+  model.setGNaK(model.getGNaK() * 1.645);
+  model.setGNCX(model.getGNCX() * 1.096);
+  model.setGpCa(model.getGpCa() * 0.270);
+  model.setGserca(model.getGserca() * 2.14);
 
   std::cout << "Starting simulation" << std::endl;
   // Simulation parameters
