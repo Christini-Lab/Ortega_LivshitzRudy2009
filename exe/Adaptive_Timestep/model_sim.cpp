@@ -61,6 +61,9 @@ int main() {
   model.setGpCa(model.getGpCa() * 0.270);
   model.setGserca(model.getGserca() * 2.14);
 
+  model.setNai(8);
+  model.setKi(150);
+
   std::cout << "Starting simulation" << std::endl;
   // Simulation parameters
   double stim = 0;

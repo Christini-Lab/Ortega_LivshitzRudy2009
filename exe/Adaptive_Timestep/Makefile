@@ -3,7 +3,7 @@ OUTPUT_OPTION = -MMD -MP -o $@
 LFLAGS =
 LIBS =
 
-EXE = Model_Simulation
+EXE = changeIntra/Model_Simulation
 EXE_SRC = model_sim.cpp
 
 .PHONY: all clean
