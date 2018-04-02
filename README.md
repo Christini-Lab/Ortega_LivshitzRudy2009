@@ -15,8 +15,9 @@ Branches:
   * **Timed** - Fixed time step.
   * **master** - Current used version, similar to Optimized.
 
-Devenyi, Ryan A., et al. "Differential roles of two delayed rectifier potassium currents in regulation of ventricular action potential duration and arrhythmia susceptibility." The Journal of physiology 595.7 (2017): 2301-2317.
-Livshitz, Leonid, and Yoram Rudy. "Uniqueness and stability of action potential models during rest, pacing, and conduction using problem-solving environment." Biophysical journal 97.5 (2009): 1265-1276.
+References:
+  * Devenyi, Ryan A., et al. "Differential roles of two delayed rectifier potassium currents in regulation of ventricular action potential duration and arrhythmia susceptibility." The Journal of physiology 595.7 (2017): 2301-2317.
+  * Livshitz, Leonid, and Yoram Rudy. "Uniqueness and stability of action potential models during rest, pacing, and conduction using problem-solving environment." Biophysical journal 97.5 (2009): 1265-1276.
 
 This repository can be used as a subtree. Follow the directions below to
 add/update the model to your repository.
