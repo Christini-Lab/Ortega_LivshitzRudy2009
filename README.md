@@ -14,6 +14,8 @@ Branches:
   * **Timed** - Fixed time step.
   * **master** - Current used version, similar to Optimized.
 
+Devenyi, Ryan A., et al. "Differential roles of two delayed rectifier potassium currents in regulation of ventricular action potential duration and arrhythmia susceptibility." The Journal of physiology 595.7 (2017): 2301-2317.
+
 This repository can be used as a subtree. Follow the directions below to
 add/update the model to your repository.
 
