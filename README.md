@@ -2,8 +2,17 @@
 ---
 
 ### Introduction
-This version of the Livshitz Rudy 2009 guinea pig ventricular model has been
-modified for real-time performance in a dynamic clamp setting.
+This version of the Livshitz Rudy 2009 guinea pig ventricular model. The model
+is split into several branches for specific purposes. For example, the real-time
+optimized version used in the 2017 Devenyi and Ortega (cited below) is located
+in the RealTime branch.
+
+Branches:
+  * **Adaptive** - Uses an adaptive time step for integration.
+  * **Optimized** - Most recent real-time optimized version.
+  * **RealTime** - Version used in the 2017 Devenyi and Ortega paper.
+  * **Timed** - Fixed time step.
+  * **master** - Current used version, similar to Optimized.
 
 This repository can be used as a subtree. Follow the directions below to
 add/update the model to your repository.
@@ -24,7 +33,7 @@ Add remote URL of the model to your local project.
   * **LivR2009_remote** - Name of remote, you can change this
 
 ```sh
-git remote add -f LivR2009_remote https://pbtech-vc.med.cornell.edu/git/fro2002/dynclamp_livr2009_model.git
+git remote add -f LivR2009_remote https://github.com/francis-ortega/Ortega_LivshitzRudy2009.git
 ```
 
 Add model as a subtree of the project.
